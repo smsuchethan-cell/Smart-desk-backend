@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Digital Product Support Desk</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+  <style id="app-style">
+    :root {
+      --primary: #0066cc;
+      --primary-dark: #004d99;
+      --secondary: #00cc99;
+      --dark: #1a1a2e;
+      --light: #f7f7f9;
+      --transition: all 0.3s ease;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      color: var(--dark);
+      overflow-x: hidden;
+      background-color: var(--light);
+    }
+    
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 15px 0;
+      transition: var(--transition);
+    }
+    
+    .navbar.scrolled {
+      padding: 8px 0;
+    }
+    
+    .navbar-brand {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1.5rem;
+    }
+    
+    .nav-link {
+      font-weight: 500;
+      color: var(--dark);
+      margin: 0 10px;
+      position: relative;
+      transition: var(--transition);
+    }
+    
+    .nav-link:after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: var(--primary);
+      transition: var(--transition);
+    }
+    
+    .nav-link:hover:after {
+      width: 100%;
+    }
+    
+    .nav-link.active:after {
+      width: 100%;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      border-radius: 4px;
+      padding: 10px 25px;
+      transition: var(--transition);
+      font-weight: 600;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-secondary {
+      background: var(--secondary);
+      border-color: var(--secondary);
+      color: white;
+      border-radius: 4px;
+      padding: 10px 25px;
+      transition: var(--transition);
+      font-weight: 600;
+    }
+    
+    .btn-secondary:hover {
+      background: #00b386;
+      border-color: #00b386;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hero {
+      height: 100vh;
+      min-height: 600px;
+      background: linear-gradient(135deg, rgba(26, 26, 46, 0.8), rgba(0, 102, 204, 0.8)), 
+                  url('https://cdn.pixabay.com/photo/2018/05/08/08/44/artificial-intelligence-3382507_1280.jpg') no-repeat center center;
+      background-size: cover;
+      color: white;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    
+    .hero-content {
+      z-index: 1;
+    }
+    
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.5rem;
+      font-weight: 400;
+      margin-bottom: 40px;
+      opacity: 0.9;
+    }
+    
+    .feature-card {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      transition: var(--transition);
+      height: 100%;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+      height: 70px;
+      width: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--light);
+      color: var(--primary);
+      border-radius: 50%;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+    
+    .section-title {
+      font-weight: 700;
+      margin-bottom: 15px;
+      position: relative;
+    }
+    
+    .section-subtitle {
+      color: var(--primary);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+    
+    .section {
+      padding: 100px 0;
+    }
+    
+    .bg-light {
+      background-color: var(--light);
+    }
+    
+    .product-img {
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .step-box {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .step-number {
+      position: absolute;
+      top: -15px;
+      left: -15px;
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      z-index: 2;
+    }
+    
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+    
+    .timeline:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: var(--primary);
+    }
+    
+    .timeline-item {
+      position: relative;
+      margin-bottom: 30px;
+    }
+    
+    .timeline-item:before {
+      content: '';
+      position: absolute;
+      left: -36px;
+      top: 5px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid white;
+    }
+    
+    .video-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .video-container img {
+      width: 100%;
+      transition: var(--transition);
+    }
+    
+    .video-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .video-play:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .video-play i {
+      font-size: 2rem;
+      color: var(--primary);
+      transition: var(--transition);
+    }
+    
+    .video-play:hover i {
+      color: white;
+    }
+    
+    .form-container {
+      background: white;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    .form-control {
+      height: 50px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      padding: 10px 15px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    }
+    
+    .form-label {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .qr-badge {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .qr-image {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .admin-table th {
+      font-weight: 600;
+      background-color: var(--light);
+    }
+    
+    .admin-table tr {
+      transition: var(--transition);
+    }
+    
+    .admin-table tr:hover {
+      background-color: rgba(0, 102, 204, 0.05);
+    }
+    
+    .page {
+      display: none;
+      animation-duration: 0.5s;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    .footer {
+      background: var(--dark);
+      color: white;
+      padding: 60px 0 30px;
+    }
+    
+    .footer-title {
+      font-weight: 700;
+      margin-bottom: 25px;
+      color: white;
+    }
+    
+    .footer-links {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .footer-links li {
+      margin-bottom: 10px;
+    }
+    
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    
+    .footer-links a:hover {
+      color: white;
+      text-decoration: none;
+      padding-left: 5px;
+    }
+    
+    .social-icons {
+      display: flex;
+      list-style: none;
+      padding: 0;
+    }
+    
+    .social-icons li {
+      margin-right: 15px;
+    }
+    
+    .social-icons a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      color: white;
+      transition: var(--transition);
+    }
+    
+    .social-icons a:hover {
+      background: var(--primary);
+      transform: translateY(-3px);
+    }
+    
+    .copyright {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Accordion styles */
+    .accordion-item {
+      border: none;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .accordion-button {
+      font-weight: 600;
+      padding: 20px;
+    }
+    
+    .accordion-button:not(.collapsed) {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    /* Success animation */
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 30px;
+      position: relative;
+    }
+    
+    .success-checkmark .check-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid var(--secondary);
+    }
+    
+    .success-checkmark .check-icon::before {
+      top: 3px;
+      left: -2px;
+      width: 30px;
+      transform-origin: 100% 50%;
+      border-radius: 100px 0 0 100px;
+    }
+    
+    .success-checkmark .check-icon::after {
+      top: 0;
+      left: 30px;
+      width: 60px;
+      transform-origin: 0 50%;
+      border-radius: 0 100px 100px 0;
+      animation: rotate-circle 4.25s ease-in;
+    }
+    
+    .success-checkmark .check-icon::before, .success-checkmark .check-icon::after {
+      content: '';
+      height: 100px;
+      position: absolute;
+      transform: rotate(-45deg);
+    }
+    
+    .success-checkmark .check-icon .icon-line {
+      height: 5px;
+      background-color: var(--secondary);
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+    
+    .success-checkmark .check-icon .icon-line.line-tip {
+      top: 46px;
+      left: 14px;
+      width: 25px;
+      transform: rotate(45deg);
+      animation: icon-line-tip 0.75s;
+    }
+    
+    .success-checkmark .check-icon .icon-line.line-long {
+      top: 38px;
+      right: 8px;
+      width: 47px;
+      transform: rotate(-45deg);
+      animation: icon-line-long 0.75s;
+    }
+    
+    .success-checkmark .check-icon .icon-circle {
+      top: -4px;
+      left: -4px;
+      z-index: 10;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: absolute;
+      box-sizing: content-box;
+      border: 4px solid rgba(0, 204, 153, 0.5);
+    }
+    
+    .success-checkmark .check-icon .icon-fix {
+      top: 8px;
+      width: 5px;
+      left: 26px;
+      z-index: 1;
+      height: 85px;
+      position: absolute;
+      transform: rotate(-45deg);
+      background-color: white;
+    }
+    
+    @keyframes rotate-circle {
+      0% {
+        transform: rotate(-45deg);
+      }
+      5% {
+        transform: rotate(-45deg);
+      }
+      12% {
+        transform: rotate(-405deg);
+      }
+      100% {
+        transform: rotate(-405deg);
+      }
+    }
+    
+    @keyframes icon-line-tip {
+      0% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      54% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      70% {
+        width: 50px;
+        left: -8px;
+        top: 37px;
+      }
+      84% {
+        width: 17px;
+        left: 21px;
+        top: 48px;
+      }
+      100% {
+        width: 25px;
+        left: 14px;
+        top: 45px;
+      }
+    }
+    
+    @keyframes icon-line-long {
+      0% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      65% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      84% {
+        width: 55px;
+        right: 0px;
+        top: 35px;
+      }
+      100% {
+        width: 47px;
+        right: 8px;
+        top: 38px;
+      }
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 991px) {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1.2rem;
+      }
+      
+      .section {
+        padding: 70px 0;
+      }
+    }
+    
+    @media (max-width: 767px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+      
+      .section {
+        padding: 50px 0;
+      }
+      
+      .form-container {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="javascript:void(0)">SmartSupport<span class="text-secondary">Desk</span></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="#home-page">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#product-page">Product</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#badge-page">Digital Badge</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#admin-page">Admin</a>
+          </li>
+          <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+            <button class="btn btn-primary interested-btn">I'm Interested</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Home Page -->
+  <div id="home-page" class="page active">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-7 hero-content">
+            <h1 class="hero-title animate__animated animate__fadeInUp">Smart Digital Product Support Desk</h1>
+            <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">Revolutionize your customer support with AI-powered solutions</p>
+            <div class="animate__animated animate__fadeInUp animate__delay-2s">
+              <a href="#product-page" class="btn btn-primary me-3">Learn More</a>
+              <button class="btn btn-secondary interested-btn">I'm Interested</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section bg-light">
+      <div class="container">
+        <div class="text-center mb-5">
+          <p class="section-subtitle" data-aos="fade-up">Features</p>
+          <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Smart Solutions for Modern Support</h2>
+          <p class="mb-5" data-aos="fade-up" data-aos-delay="200">Discover how our digital support platform transforms customer service</p>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-4" data-aos="fade-up">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-robot"></i>
+              </div>
+              <h3>AI-Powered Support</h3>
+              <p>Our intelligent system learns from each interaction to provide smarter, faster responses to customer inquiries.</p>
+            </div>
+          </div>
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-comments"></i>
+              </div>
+              <h3>Omnichannel Experience</h3>
+              <p>Seamlessly integrate support across web, mobile, social media, and messaging platforms for consistent service.</p>
+            </div>
+          </div>
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h3>Actionable Analytics</h3>
+              <p>Gain valuable insights from customer interactions with detailed reporting and visualization tools.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Product Page -->
+  <div id="product-page" class="page">
+    <!-- What It Is Section -->
+    <section class="section">
+      <div class="container">
+        <div class="text-center mb-5">
+          <p class="section-subtitle" data-aos="fade-up">Product Overview</p>
+          <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">What is Smart Digital Product Support Desk?</h2>
+        </div>
+
+        <div class="row align-items-center">
+          <div class="col-lg-6 mb-4 mb-lg-0" data-aos="fade-right">
+            <img src="https://cdn.pixabay.com/photo/2018/09/24/12/26/man-3699562_1280.jpg" alt="Smart Digital Product Support" class="product-img img-fluid">
+          </div>
+          <div class="col-lg-6" data-aos="fade-left">
+            <p>The Smart Digital Product Support Desk is a next-generation customer service platform that combines artificial intelligence, machine learning, and human expertise to deliver exceptional product support experiences.</p>
+            <p>Our system works as a central hub for all customer inquiries, automatically routing, prioritizing, and resolving issues with minimal human intervention while maintaining the personal touch that customers appreciate.</p>
+            <p>With seamless integration capabilities, advanced analytics, and an intuitive interface, it's designed to transform your support operations from a cost center to a strategic advantage.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section bg-light">
+      <div class="container">
+        <div class="text-center mb-5">
+          <p class="section-subtitle" data-aos="fade-up">Process</p>
+          <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">How It Works</h2>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-3" data-aos="fade-up">
+            <div class="step-box">
+              <div class="step-number">1</div>
+              <h3>Inquiry Reception</h3>
+              <p>Customer inquiries are received through multiple channels and consolidated into a single interface.</p>
+            </div>
+          </div>
+          <div class="col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="step-box">
+              <div class="step-number">2</div>
+              <h3>AI Analysis</h3>
+              <p>Our AI engine analyzes the query, identifies intent, and categorizes the issue for optimal handling.</p>
+            </div>
+          </div>
+          <div class="col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="step-box">
+              <div class="step-number">3</div>
+              <h3>Resolution Path</h3>
+              <p>The system determines the best resolution path—automation, knowledge base, or human agent assistance.</p>
+            </div>
+          </div>
+          <div class="col-lg-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="step-box">
+              <div class="step-number">4</div>
+              <h3>Continuous Learning</h3>
+              <p>Each interaction improves the system's knowledge base for better future support experiences.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lifecycle, Uses, Benefits Section -->
+    <section class="section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-6" data-aos="fade-right">
+            <p class="section-subtitle">Capabilities</p>
+            <h2 class="section-title">Product Lifecycle & Use Cases</h2>
+            
+            <div class="accordion" id="productAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Product Lifecycle
+                  </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#productAccordion">
+                  <div class="accordion-body">
+                    <div class="timeline">
+                      <div class="timeline-item">
+                        <h4>Implementation</h4>
+                        <p>Quick 4-week integration with existing systems and knowledge transfer</p>
+                      </div>
+                      <div class="timeline-item">
+                        <h4>Learning Phase</h4>
+                        <p>2-3 month AI training period using historical support data</p>
+                      </div>
+                      <div class="timeline-item">
+                        <h4>Optimization</h4>
+                        <p>Continuous refinement based on analytics and feedback</p>
+                      </div>
+                      <div class="timeline-item">
+                        <h4>Evolution</h4>
+                        <p>Regular feature updates and capability expansion</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTwo">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Use Cases
+                  </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#productAccordion">
+                  <div class="accordion-body">
+                    <ul>
+                      <li><strong>E-commerce Support:</strong> Handle order status, returns, product questions</li>
+                      <li><strong>Technical Product Support:</strong> Troubleshooting, setup assistance, compatibility questions</li>
+                      <li><strong>Service Businesses:</strong> Appointment scheduling, service information, follow-ups</li>
+                      <li><strong>Enterprise IT Support:</strong> Internal helpdesk automation and ticket management</li>
+                      <li><strong>Educational Institutions:</strong> Student services and administrative support</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-6" data-aos="fade-left">
+            <p class="section-subtitle">Advantages</p>
+            <h2 class="section-title">Key Benefits</h2>
+            
+            <div class="accordion" id="benefitsAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingThree">
+                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+                    Operational Benefits
+                  </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse show" aria-labelledby="headingThree" data-bs-parent="#benefitsAccordion">
+                  <div class="accordion-body">
+                    <ul>
+                      <li><strong>Cost Reduction:</strong> 40-60% decrease in support operational costs</li>
+                      <li><strong>Efficiency:</strong> 75% faster resolution times for common inquiries</li>
+                      <li><strong>Scalability:</strong> Handle 10x inquiry volume without proportional staffing increase</li>
+                      <li><strong>Consistency:</strong> Standardized responses across all support channels</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingFour">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                    Customer Experience Benefits
+                  </button>
+                </h2>
+                <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#benefitsAccordion">
+                  <div class="accordion-body">
+                    <ul>
+                      <li><strong>24/7 Availability:</strong> Round-the-clock support without overtime costs</li>
+                      <li><strong>Personalization:</strong> Tailored responses based on customer history and preferences</li>
+                      <li><strong>Multiple Languages:</strong> Support in 40+ languages without additional staffing</li>
+                      <li><strong>Channel Flexibility:</strong> Customers engage on their preferred platform</li>
+                      <li><strong>Satisfaction:</strong> Average 30% increase in customer satisfaction scores</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingFive">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                    Business Impact
+                  </button>
+                </h2>
+                <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#benefitsAccordion">
+                  <div class="accordion-body">
+                    <ul>
+                      <li><strong>Data Insights:</strong> Rich analytics on customer issues and preferences</li>
+                      <li><strong>Agent Focus:</strong> Human agents focus on complex, high-value interactions</li>
+                      <li><strong>Brand Perception:</strong> Enhanced reputation for responsive, modern support</li>
+                      <li><strong>ROI:</strong> Average 250-300% return on investment within 12 months</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video Demo Section -->
+    <section class="section bg-light">
+      <div class="container">
+        <div class="text-center mb-5">
+          <p class="section-subtitle" data-aos="fade-up">See It In Action</p>
+          <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Product Demo</h2>
+        </div>
+        
+        <div class="row justify-content-center">
+          <div class="col-lg-10" data-aos="zoom-in">
+            <div class="video-container">
+              <img src="https://cdn.pixabay.com/photo/2020/04/08/16/32/keyboard-5017973_1280.jpg" alt="Product Demo Video" class="img-fluid">
+              <div class="video-play" id="play-demo">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section">
+      <div class="container">
+        <div class="row justify-content-center text-center">
+          <div class="col-lg-8">
+            <h2 class="section-title" data-aos="fade-up">Ready to Transform Your Customer Support?</h2>
+            <p data-aos="fade-up" data-aos-delay="100">Join hundreds of businesses that have revolutionized their customer service experience with our Smart Digital Product Support Desk.</p>
+            <div data-aos="fade-up" data-aos-delay="200">
+              <button class="btn btn-primary btn-lg mt-4 interested-btn">I'm Interested</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Enquiry Form Page -->
+  <div id="form-page" class="page">
+    <section class="section bg-light">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="form-container" data-aos="fade-up">
+              <div class="text-center mb-4">
+                <h2 class="section-title">Express Your Interest</h2>
+                <p>Fill out the form below and our team will get back to you with more information.</p>
+              </div>
+              
+              <form id="interest-form">
+                <div class="form-group">
+                  <label for="name" class="form-label">Full Name</label>
+                  <input type="text" class="form-control" id="name" placeholder="Enter your full name" required>
+                  <div class="invalid-feedback">Please enter your name</div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="email" class="form-label">Email Address</label>
+                  <input type="email" class="form-control" id="email" placeholder="Enter your email address" required>
+                  <div class="invalid-feedback">Please enter a valid email address</div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="phone" class="form-label">Phone Number</label>
+                  <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number" required>
+                  <div class="invalid-feedback">Please enter your phone number</div>
+                </div>
+                
+                <div class="text-center mt-4">
+                  <button type="submit" class="btn btn-primary btn-lg" id="submit-form">
+                    <span>Submit</span>
+                    <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Success Page -->
+  <div id="success-page" class="page">
+    <section class="section bg-light">
+      <div class="container">
+        <div class="row justify-content-center text-center">
+          <div class="col-lg-6">
+            <div class="form-container" data-aos="fade-up">
+              <div class="success-checkmark">
+                <div class="check-icon">
+                  <span class="icon-line line-tip"></span>
+                  <span class="icon-line line-long"></span>
+                  <div class="icon-circle"></div>
+                  <div class="icon-fix"></div>
+                </div>
+              </div>
+              
+              <h2 class="section-title">Thank You!</h2>
+              <p class="mb-4">Your interest has been registered successfully. One of our representatives will contact you shortly with more information about our Smart Digital Product Support Desk.</p>
+              
+              <a href="#home-page" class="btn btn-primary">Back to Home</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Digital Badge Page -->
+  <div id="badge-page" class="page">
+    <section class="section">
+      <div class="container">
+        <div class="text-center mb-5">
+          <p class="section-subtitle" data-aos="fade-up">Access Control</p>
+          <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Digital Master Badge</h2>
+          <p data-aos="fade-up" data-aos-delay="200">Scan this QR code to access your Smart Digital Product Support Desk administrator features.</p>
+        </div>
+        
+        <div class="row justify-content-center">
+          <div class="col-lg-6" data-aos="fade-up">
+            <div class="qr-badge text-center">
+              <img src="https://cdn.pixabay.com/photo/2021/10/11/13/12/qr-code-6701489_1280.png" alt="Master QR Badge" class="qr-image img-fluid mb-4">
+              <h4>Master Access Badge</h4>
+              <p class="mb-4">This QR code provides administrative access to the Smart Digital Product Support Desk system.</p>
+              <a href="javascript:void(0)" class="btn btn-primary" id="download-badge"><i class="fas fa-download me-2"></i> Download Badge</a>
+            </div>
+          </div>
+          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="card h-100">
+              <div class="card-body">
+                <h4 class="mb-4">Badge Usage Instructions</h4>
+                
+                <div class="mb-4">
+                  <h5><i class="fas fa-lock me-2"></i> Security</h5>
+                  <p>This QR code contains encrypted credentials that grant administrative access to your support system. Keep it secure and share only with authorized personnel.</p>
+                </div>
+                
+                <div class="mb-4">
+                  <h5><i class="fas fa-qrcode me-2"></i> Scanning</h5>
+                  <p>Use any standard QR scanner or the Smart Support mobile app to scan this code. The system will authenticate your credentials automatically.</p>
+                </div>
+                
+                <div class="mb-4">
+                  <h5><i class="fas fa-sync-alt me-2"></i> Refreshing</h5>
+                  <p>For security purposes, this QR code refreshes every 30 days. Return to this page to download the latest version when needed.</p>
+                </div>
+                
+                <div>
+                  <h5><i class="fas fa-user-shield me-2"></i> Permissions</h5>
+                  <p>Scanning this badge grants full administrative rights including access to sensitive customer data, system settings, and advanced analytics.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Admin Dashboard Page -->
+  <div id="admin-page" class="page">
+    <section class="section">
+      <div class="container">
+        <div class="text-center mb-5">
+          <p class="section-subtitle" data-aos="fade-up">Management</p>
+          <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Admin Dashboard</h2>
+          <p data-aos="fade-up" data-aos-delay="200">View and manage all customer inquiries from a centralized dashboard.</p>
+        </div>
+        
+        <div class="card mb-4" data-aos="fade-up">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-lg-8 mb-3 mb-lg-0">
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-search"></i></span>
+                  <input type="text" class="form-control" id="search-inquiries" placeholder="Search inquiries...">
+                </div>
+              </div>
+              <div class="col-lg-4 text-lg-end">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-outline-primary">Export</button>
+                  <button type="button" class="btn btn-outline-primary">Print</button>
+                  <button type="button" class="btn btn-outline-primary">Filter</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover admin-table mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Phone</th>
+                    <th scope="col">Submission Time</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="inquiries-table">
+                  <!-- Table will be populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-4 mb-5 mb-lg-0">
+          <h4 class="footer-title">SmartSupportDesk</h4>
+          <p>Revolutionizing customer support with AI-powered solutions designed for the modern business.</p>
+          <ul class="social-icons mt-4">
+            <li><a href="javascript:void(0)"><i class="fab fa-facebook-f"></i></a></li>
+            <li><a href="javascript:void(0)"><i class="fab fa-twitter"></i></a></li>
+            <li><a href="javascript:void(0)"><i class="fab fa-linkedin-in"></i></a></li>
+            <li><a href="javascript:void(0)"><i class="fab fa-instagram"></i></a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-4 mb-5 mb-lg-0">
+          <h4 class="footer-title">Company</h4>
+          <ul class="footer-links">
+            <li><a href="javascript:void(0)">About Us</a></li>
+            <li><a href="javascript:void(0)">Our Team</a></li>
+            <li><a href="javascript:void(0)">Careers</a></li>
+            <li><a href="javascript:void(0)">Press</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-4 mb-5 mb-lg-0">
+          <h4 class="footer-title">Resources</h4>
+          <ul class="footer-links">
+            <li><a href="javascript:void(0)">Blog</a></li>
+            <li><a href="javascript:void(0)">Case Studies</a></li>
+            <li><a href="javascript:void(0)">Documentation</a></li>
+            <li><a href="javascript:void(0)">Help Center</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4 col-md-4">
+          <h4 class="footer-title">Contact Us</h4>
+          <ul class="footer-links">
+            <li><i class="fas fa-map-marker-alt me-2"></i> 123 Innovation Street, Tech City</li>
+            <li><i class="fas fa-phone-alt me-2"></i> +1 (555) 123-4567</li>
+            <li><i class="fas fa-envelope me-2"></i> info@smartsupportdesk.com</li>
+          </ul>
+          
+          <form class="mt-4">
+            <div class="input-group">
+              <input type="email" class="form-control" placeholder="Subscribe to newsletter">
+              <button class="btn btn-primary" type="button">Subscribe</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="text-center copyright">
+        <p>&copy; 2025 Smart Digital Product Support Desk. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script id="app-script">
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize AOS animation
+      AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true
+      });
+      
+      // Navigation scroll effect
+      window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      });
+      
+      // Navigation links handler
+      const navLinks = document.querySelectorAll('.nav-link');
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Remove active class from all links
+          navLinks.forEach(navLink => navLink.classList.remove('active'));
+          
+          // Add active class to clicked link
+          this.classList.add('active');
+          
+          // Get the target page ID
+          const targetId = this.getAttribute('href');
+          
+          // Hide all pages
+          document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+          });
+          
+          // Show target page
+          document.querySelector(targetId).classList.add('active');
+          
+          // Scroll to top
+          window.scrollTo(0, 0);
+        });
+      });
+      
+      // Interest button handler
+      const interestBtns = document.querySelectorAll('.interested-btn');
+      interestBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Hide all pages
+          document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+          });
+          
+          // Show form page
+          document.querySelector('#form-page').classList.add('active');
+          
+          // Update navigation
+          navLinks.forEach(navLink => navLink.classList.remove('active'));
+          
+          // Scroll to top
+          window.scrollTo(0, 0);
+        });
+      });
+      
+      // Video play button
+      const playButton = document.getElementById('play-demo');
+      if (playButton) {
+        playButton.addEventListener('click', function() {
+          alert('This is a prototype. Video playback will be added in the full version.');
+        });
+      }
+      
+      // Download badge button
+      const downloadButton = document.getElementById('download-badge');
+      if (downloadButton) {
+        downloadButton.addEventListener('click', function() {
+          alert('This is a prototype. Badge download functionality will be added in the full version.');
+        });
+      }
+      
+      // Form submission
+      const interestForm = document.getElementById('interest-form');
+      if (interestForm) {
+        interestForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          // Get form values
+          const name = document.getElementById('name').value;
+          const email = document.getElementById('email').value;
+          const phone = document.getElementById('phone').value;
+          
+          // Validate form
+          let isValid = true;
+          
+          if (!name.trim()) {
+            document.getElementById('name').classList.add('is-invalid');
+            isValid = false;
+          } else {
+            document.getElementById('name').classList.remove('is-invalid');
+          }
+          
+          if (!email.trim() || !email.includes('@')) {
+            document.getElementById('email').classList.add('is-invalid');
+            isValid = false;
+          } else {
+            document.getElementById('email').classList.remove('is-invalid');
+          }
+          
+          if (!phone.trim()) {
+            document.getElementById('phone').classList.add('is-invalid');
+            isValid = false;
+          } else {
+            document.getElementById('phone').classList.remove('is-invalid');
+          }
+          
+          if (isValid) {
+            // Show loading spinner
+            const submitButton = document.getElementById('submit-form');
+            submitButton.disabled = true;
+            submitButton.querySelector('.spinner-border').classList.remove('d-none');
+            
+            // Simulate API call
+            setTimeout(function() {
+              // Save to localStorage
+              const inquiry = {
+                name: name,
+                email: email,
+                phone: phone,
+                time: new Date().toLocaleString()
+              };
+              
+              let inquiries = JSON.parse(localStorage.getItem('inquiries')) || [];
+              inquiries.push(inquiry);
+              localStorage.setItem('inquiries', JSON.stringify(inquiries));
+              
+              // Hide form page
+              document.querySelector('#form-page').classList.remove('active');
+              
+              // Show success page
+              document.querySelector('#success-page').classList.add('active');
+              
+              // Reset form
+              interestForm.reset();
+              submitButton.disabled = false;
+              submitButton.querySelector('.spinner-border').classList.add('d-none');
+              
+              // Scroll to top
+              window.scrollTo(0, 0);
+            }, 1500);
+          }
+        });
+      }
+      
+      // Populate admin table from localStorage
+      function populateAdminTable() {
+        const tableBody = document.getElementById('inquiries-table');
+        if (tableBody) {
+          const inquiries = JSON.parse(localStorage.getItem('inquiries')) || [];
+          
+          if (inquiries.length === 0) {
+            // Add a sample inquiry if none exist
+            const sampleInquiry = {
+              name: 'John Doe',
+              email: 'john.doe@example.com',
+              phone: '(555) 123-4567',
+              time: new Date().toLocaleString()
+            };
+            inquiries.push(sampleInquiry);
+            localStorage.setItem('inquiries', JSON.stringify(inquiries));
+          }
+          
+          tableBody.innerHTML = '';
+          
+          inquiries.forEach((inquiry, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${inquiry.name}</td>
+              <td>${inquiry.email}</td>
+              <td>${inquiry.phone}</td>
+              <td>${inquiry.time}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+              </td>
+            `;
+            tableBody.appendChild(row);
+          });
+        }
+      }
+      
+      // Search functionality for admin table
+      const searchInput = document.getElementById('search-inquiries');
+      if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          const searchTerm = this.value.toLowerCase();
+          const rows = document.querySelectorAll('#inquiries-table tr');
+          
+          rows.forEach(row => {
+            const name = row.cells[1].textContent.toLowerCase();
+            const email = row.cells[2].textContent.toLowerCase();
+            const phone = row.cells[3].textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm)) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      }
+      
+      // Populate admin table on page load and whenever the admin page is opened
+      populateAdminTable();
+      document.querySelector('a[href="#admin-page"]').addEventListener('click', populateAdminTable);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# Root .gitignore for Smart Digital Desk
+
+# =========================
+# Backend (Python / FastAPI)
+# =========================
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/.pytest_cache/
+backend/venv/
+backend/.venv/
+backend/env/
+backend/.env
+backend/static/qr/*
+backend/static/badges/*
+backend/static/photos/*
+!backend/static/qr/.gitkeep
+!backend/static/badges/.gitkeep
+!backend/static/photos/.gitkeep
+
+# Ignore DB files (if using SQLite in future)
+backend/*.sqlite3
+backend/*.db
+
+# =========================
+# Frontend (React / Node)
+# =========================
+frontend/frontend/node_modules/
+frontend/frontend/build/
+frontend/frontend/dist/
+frontend/frontend/.env.local
+frontend/frontend/.env.development.local
+frontend/frontend/.env.test.local
+frontend/frontend/.env.production.local
+frontend/frontend/npm-debug.log*
+frontend/frontend/yarn-debug.log*
+frontend/frontend/yarn-error.log*
+
+# =========================
+# OS / IDE / Global
+# =========================
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
