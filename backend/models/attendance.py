@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Boolean, TIMESTAMP
+from sqlalchemy import Column, Integer, ForeignKey, Boolean, TIMESTAMP, String
 from sqlalchemy.orm import relationship
 from database.db import Base
 from datetime import datetime
@@ -7,11 +7,12 @@ from datetime import datetime
 class Attendance(Base):
     __tablename__ = "attendance"
 
-    id = Column(Integer, primary_key=True, index=True)
-    attendee_id = Column(Integer, ForeignKey("attendees.id", ondelete="CASCADE"), nullable=False, unique=True)
-    event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    id            = Column(Integer, primary_key=True, index=True)
+    attendee_id   = Column(Integer, ForeignKey("attendees.id", ondelete="CASCADE"), nullable=False, unique=True)
+    event_id      = Column(Integer, ForeignKey("events.id",    ondelete="CASCADE"), nullable=False)
     checked_in_at = Column(TIMESTAMP, default=datetime.utcnow)
-    badge_printed = Column(Boolean, default=False)
+    badge_printed = Column(Boolean,   default=False)
+    badge_path    = Column(String(500))                         # ← NEW
 
     attendee = relationship("Attendee", back_populates="attendance")
-    event = relationship("Event", backref="attendance_records")
+    event    = relationship("Event",    backref="attendance_records")

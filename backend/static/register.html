@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Smart Desk — Register</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;background:#0f0f1a;color:#fff;
+       min-height:100vh;display:flex;align-items:center;
+       justify-content:center;padding:24px}
+  .card{background:#1a1a2e;border:1px solid #2a2a45;border-radius:16px;
+        padding:32px 24px;width:100%;max-width:440px}
+  .logo{font-size:32px;text-align:center;margin-bottom:6px}
+  h1{font-size:20px;color:#6c63ff;text-align:center;margin-bottom:4px}
+  .sub{color:#888;font-size:13px;text-align:center;margin-bottom:28px}
+  label{display:block;font-size:13px;color:#aaa;margin-bottom:6px;margin-top:16px}
+  input,select{width:100%;padding:12px;background:#0f0f1a;border:1px solid #2a2a45;
+               border-radius:8px;color:#fff;font-size:14px;outline:none;transition:border .2s}
+  input:focus,select:focus{border-color:#6c63ff}
+  select option{background:#1a1a2e}
+  .photo-row{display:flex;align-items:center;gap:16px;margin-top:16px}
+  .photo-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;
+                 border:2px solid #6c63ff;display:none}
+  .photo-placeholder{width:64px;height:64px;border-radius:50%;background:#0f0f1a;
+                     border:2px dashed #2a2a45;display:flex;align-items:center;
+                     justify-content:center;font-size:24px;flex-shrink:0}
+  .upload-btn{padding:10px 16px;background:#1a1a2e;border:1px solid #2a2a45;
+              border-radius:8px;color:#aaa;cursor:pointer;font-size:13px;transition:.2s}
+  .upload-btn:hover{border-color:#6c63ff;color:#6c63ff}
+  .submit-btn{width:100%;margin-top:24px;padding:14px;background:#6c63ff;color:#fff;
+              font-size:15px;font-weight:bold;border:none;border-radius:10px;
+              cursor:pointer;transition:.2s}
+  .submit-btn:hover{background:#5a52e0}
+  .submit-btn:disabled{background:#333;cursor:not-allowed}
+  .spinner{display:none;margin:16px auto;width:28px;height:28px;
+           border:3px solid #2a2a45;border-top-color:#6c63ff;
+           border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .success-box{display:none;text-align:center;padding:24px 0}
+  .success-code{font-size:36px;font-weight:bold;letter-spacing:10px;
+                color:#6c63ff;background:#0f0f1a;padding:16px;
+                border-radius:10px;margin:16px 0;border:1px solid #2a2a45}
+  .err{color:#ff4757;font-size:13px;margin-top:12px;text-align:center;display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🎫</div>
+  <h1>Smart Desk</h1>
+  <p class="sub">Register for the event — takes 30 seconds</p>
+
+  <div id="form-section">
+    <label>Event *</label>
+    <select id="event_id">
+      <option value="">Loading events…</option>
+    </select>
+
+    <label>Full Name *</label>
+    <input id="name" type="text" placeholder="Your full name"/>
+
+    <label>Email *</label>
+    <input id="email" type="email" placeholder="you@email.com"/>
+
+    <label>Designation</label>
+    <input id="designation" type="text" placeholder="e.g. CEO, Engineer, Student"/>
+
+    <label>Company / Organisation</label>
+    <input id="company" type="text" placeholder="Your company (optional)"/>
+
+    <label>Photo</label>
+    <div class="photo-row">
+      <div class="photo-placeholder" id="placeholder">👤</div>
+      <img class="photo-preview" id="preview" alt="preview"/>
+      <label class="upload-btn">
+        📷 Upload Photo
+        <input type="file" id="photo" accept="image/*" style="display:none"
+               onchange="previewPhoto(this)"/>
+      </label>
+    </div>
+
+    <div class="err" id="err"></div>
+    <button class="submit-btn" id="btn" onclick="register()">Register Now</button>
+    <div class="spinner" id="spinner"></div>
+  </div>
+
+  <div class="success-box" id="success">
+    <div style="font-size:48px">✅</div>
+    <h2 style="color:#00d4aa;margin:12px 0">You're Registered!</h2>
+    <p style="color:#888;font-size:13px">Your unique entry code:</p>
+    <div class="success-code" id="show-code"></div>
+    <p style="color:#888;font-size:13px;margin-bottom:8px">
+      We've also sent this code to your email.<br/>
+      At the event gate, scan the QR code and enter this code to print your badge.
+    </p>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+
+// Load events on page load
+window.onload = async () => {
+  try {
+    const res  = await fetch(`${API}/api/v1/events`);
+    const evs  = await res.json();
+    const sel  = document.getElementById("event_id");
+    sel.innerHTML = '<option value="">— Select Event —</option>';
+    evs.forEach(ev => {
+      const opt = document.createElement("option");
+      opt.value = ev.id;
+      opt.textContent = ev.name + (ev.date ? ` (${ev.date})` : "");
+      sel.appendChild(opt);
+    });
+  } catch { console.error("Could not load events"); }
+};
+
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById("preview").src = url;
+  document.getElementById("preview").style.display    = "block";
+  document.getElementById("placeholder").style.display = "none";
+}
+
+async function register() {
+  const event_id    = document.getElementById("event_id").value;
+  const name        = document.getElementById("name").value.trim();
+  const email       = document.getElementById("email").value.trim();
+  const designation = document.getElementById("designation").value.trim();
+  const company     = document.getElementById("company").value.trim();
+  const photoFile   = document.getElementById("photo").files[0];
+
+  const err = document.getElementById("err");
+  err.style.display = "none";
+
+  if (!event_id || !name || !email) {
+    err.textContent   = "Please fill in Event, Name, and Email.";
+    err.style.display = "block";
+    return;
+  }
+
+  document.getElementById("btn").disabled         = true;
+  document.getElementById("spinner").style.display = "block";
+
+  const fd = new FormData();
+  fd.append("event_id",    event_id);
+  fd.append("name",        name);
+  fd.append("email",       email);
+  fd.append("designation", designation);
+  fd.append("company",     company);
+  if (photoFile) fd.append("photo", photoFile);
+
+  try {
+    const res  = await fetch(`${API}/api/v1/attendees/register`, {
+      method: "POST", body: fd,
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      err.textContent   = data.detail || "Registration failed. Please try again.";
+      err.style.display = "block";
+      return;
+    }
+
+    // Show success with unique code
+    document.getElementById("form-section").style.display = "none";
+    document.getElementById("show-code").textContent      = data.unique_code;
+    document.getElementById("success").style.display      = "block";
+
+  } catch {
+    err.textContent   = "Connection error. Please try again.";
+    err.style.display = "block";
+  } finally {
+    document.getElementById("btn").disabled          = false;
+    document.getElementById("spinner").style.display = "none";
+  }
+}
+</script>
+</body>
+</html>

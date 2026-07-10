@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Smart Desk — Gate Entry</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;background:#0f0f1a;color:#fff;
+       min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{background:#1a1a2e;border:1px solid #2a2a45;border-radius:16px;
+        padding:32px 24px;width:100%;max-width:380px;text-align:center}
+  .logo{font-size:36px;margin-bottom:8px}
+  h1{font-size:20px;color:#6c63ff;margin-bottom:4px}
+  p{color:#888;font-size:14px;margin-bottom:28px}
+  input{width:100%;padding:16px;font-size:22px;text-align:center;letter-spacing:8px;
+        font-weight:bold;text-transform:uppercase;background:#0f0f1a;
+        border:2px solid #2a2a45;border-radius:10px;color:#fff;outline:none;transition:border .2s}
+  input:focus{border-color:#6c63ff}
+  button{width:100%;margin-top:16px;padding:16px;background:#6c63ff;color:#fff;
+         font-size:16px;font-weight:bold;border:none;border-radius:10px;cursor:pointer}
+  button:disabled{background:#333;cursor:not-allowed}
+  .result{margin-top:24px;padding:20px;border-radius:10px;display:none}
+  .result.success{background:rgba(0,212,170,.1);border:1px solid #00d4aa}
+  .result.error{background:rgba(255,71,87,.1);border:1px solid #ff4757}
+  .result.warning{background:rgba(255,179,0,.1);border:1px solid #ffb300}
+  .result-icon{font-size:40px;margin-bottom:8px}
+  .result-name{font-size:20px;font-weight:bold;margin-bottom:8px}
+  .result-msg{font-size:14px;color:#aaa}
+  .print-btn{display:none;width:100%;margin-top:12px;padding:14px;
+             background:#00d4aa;color:#fff;font-size:15px;font-weight:bold;
+             border:none;border-radius:10px;cursor:pointer}
+  .spinner{display:none;margin:16px auto;width:32px;height:32px;
+           border:3px solid #2a2a45;border-top-color:#6c63ff;
+           border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🎫</div>
+  <h1>Smart Desk</h1>
+  <p>Enter your unique code to check in and print your badge</p>
+
+  <input id="code" type="text" maxlength="6" placeholder="A3F9C2"
+         oninput="this.value=this.value.toUpperCase()" />
+  <button id="btn" onclick="verify()">Check In &amp; Print Badge</button>
+  <div class="spinner" id="spinner"></div>
+
+  <div class="result" id="result">
+    <div class="result-icon" id="r-icon"></div>
+    <div class="result-name" id="r-name"></div>
+    <div class="result-msg"  id="r-msg"></div>
+  </div>
+  <button class="print-btn" id="print-btn" onclick="printBadge()">🖨️ Print Badge</button>
+</div>
+
+<script>
+  const API = window.location.origin;
+  let printUrl = null;
+
+  async function verify() {
+    const code = document.getElementById("code").value.trim();
+    if (code.length < 4) { alert("Please enter your unique code"); return; }
+
+    document.getElementById("btn").disabled = true;
+    document.getElementById("spinner").style.display = "block";
+    document.getElementById("result").style.display  = "none";
+    document.getElementById("print-btn").style.display = "none";
+
+    try {
+      const fd = new FormData();
+      fd.append("unique_code", code);
+      const res  = await fetch(`${API}/api/v1/gate/verify`, { method: "POST", body: fd });
+      const data = await res.json();
+
+      document.getElementById("spinner").style.display = "none";
+      const box = document.getElementById("result");
+
+      if (!res.ok) {
+        box.className = "result error";
+        document.getElementById("r-icon").textContent = "❌";
+        document.getElementById("r-name").textContent = "Invalid Code";
+        document.getElementById("r-msg").textContent  = data.detail || "Please check your code.";
+      } else if (data.already_checked_in) {
+        box.className = "result warning";
+        document.getElementById("r-icon").textContent = "⚠️";
+        document.getElementById("r-name").textContent = data.name;
+        document.getElementById("r-msg").textContent  = "You have already checked in.";
+      } else {
+        box.className = "result success";
+        document.getElementById("r-icon").textContent = "✅";
+        document.getElementById("r-name").textContent = "Welcome, " + data.name + "!";
+        document.getElementById("r-msg").textContent  = "Badge is ready. Tap below to print.";
+        printUrl = data.print_url;
+        document.getElementById("print-btn").style.display = "block";
+        setTimeout(printBadge, 800);
+      }
+      box.style.display = "block";
+    } catch(e) {
+      document.getElementById("spinner").style.display = "none";
+      alert("Connection error. Please try again.");
+    } finally {
+      document.getElementById("btn").disabled = false;
+    }
+  }
+
+  function printBadge() {
+    if (!printUrl) return;
+    window.open(`${API}${printUrl}`, "_blank");
+  }
+
+  document.getElementById("code").addEventListener("keydown", e => {
+    if (e.key === "Enter") verify();
+  });
+</script>
+</body>
+</html>

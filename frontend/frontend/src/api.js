@@ -19,9 +19,9 @@ export const updateEvent    = (id, data)=> api.put(`/events/${id}`, data);
 export const deleteEvent    = (id)      => api.delete(`/events/${id}`);
 
 // ── Attendees ───────────────────────────────────────────────
-export const getAttendees   = (eventId) => api.get("/attendees", { params: { event_id: eventId } });
-export const registerAttendee = (data)  => api.post("/attendees/register", data);
-export const checkinAttendee  = (qrId)  => api.post(`/attendees/checkin/${qrId}`);
+export const getAttendees     = (eventId) => api.get("/attendees", { params: { event_id: eventId } });
+export const registerAttendee = (data)    => api.post("/attendees/register", data);
+export const checkinAttendee  = (qrId)    => api.post(`/attendees/checkin/${qrId}`);
 
 // ── Enquiries ───────────────────────────────────────────────
 export const getEnquiries   = ()        => api.get("/enquiries");
@@ -29,12 +29,17 @@ export const submitEnquiry  = (data)    => api.post("/enquiries", data);
 export const deleteEnquiry  = (id)      => api.delete(`/enquiries/${id}`);
 
 // ── Analytics ───────────────────────────────────────────────
-export const getSummary     = ()        => api.get("/analytics/summary");
-export const getScanStats   = ()        => api.get("/analytics/scans");
-export const getTopProducts = ()        => api.get("/analytics/top-products");
-export const getAttendanceStats = ()    => api.get("/analytics/attendance");
+export const getSummary          = ()   => api.get("/analytics/summary");
+export const getScanStats        = ()   => api.get("/analytics/scans");
+export const getTopProducts      = ()   => api.get("/analytics/top-products");
+export const getAttendanceStats  = ()   => api.get("/analytics/attendance");
+export const getAttendanceSummary = ()  => api.get("/analytics/attendance-summary");
+export const getGpsLocation = () => api.get("/stall/gps");
+
+// ── Stall Counter ────────────────────────────────────────────
+export const getStallCount = ()  => api.get("/stall/count");   // ← NEW
 
 // ── QR Scanner ──────────────────────────────────────────────
-export const scanQR         = (qrData)  => api.post(`/qr/scan?qr_data=${encodeURIComponent(qrData)}`);
+export const scanQR = (qrData) => api.post(`/qr/scan?qr_data=${encodeURIComponent(qrData)}`);
 
 export default api;

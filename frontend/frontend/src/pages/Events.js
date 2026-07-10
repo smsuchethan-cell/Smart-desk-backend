@@ -15,12 +15,31 @@ function EventModal({ initial, onClose, onSaved }) {
     if (!form.name.trim()) { toast.error("Event name required"); return; }
     setSaving(true);
     try {
-      if (isEdit) await updateEvent(initial.id, form);
-      else         await createEvent(form);
+      const payload = {
+        name:        form.name,
+        description: form.description || null,
+        location:    form.location    || null,
+        date:        form.date        || null,
+      };
+      if (isEdit) await updateEvent(initial.id, payload);
+      else        await createEvent(payload);
       toast.success(isEdit ? "Event updated!" : "Event created!");
       onSaved();
-    } catch { toast.error("Save failed"); }
-    finally { setSaving(false); }
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      let msg = "Save failed";
+      if (typeof detail === "string") {
+        msg = detail;
+      } else if (Array.isArray(detail)) {
+        msg = detail.map(d => d?.msg || JSON.stringify(d)).join(", ");
+      } else if (detail) {
+        msg = JSON.stringify(detail);
+      }
+      toast.error(msg);
+      console.error("Event save error:", err?.response?.data);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -30,25 +49,47 @@ function EventModal({ initial, onClose, onSaved }) {
         <form onSubmit={save}>
           <div className="form-group">
             <label className="form-label">Event Name *</label>
-            <input className="form-input" value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Tech Expo 2025" />
+            <input
+              className="form-input"
+              value={form.name}
+              onChange={e => set("name", e.target.value)}
+              placeholder="Tech Expo 2025"
+            />
           </div>
           <div className="form-grid">
             <div className="form-group">
               <label className="form-label">Date</label>
-              <input className="form-input" type="date" value={form.date} onChange={e=>set("date",e.target.value)} />
+              <input
+                className="form-input"
+                type="date"
+                value={form.date || ""}
+                onChange={e => set("date", e.target.value)}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Location</label>
-              <input className="form-input" value={form.location} onChange={e=>set("location",e.target.value)} placeholder="Venue / City" />
+              <input
+                className="form-input"
+                value={form.location || ""}
+                onChange={e => set("location", e.target.value)}
+                placeholder="Venue / City"
+              />
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">Description</label>
-            <textarea className="form-textarea" value={form.description} onChange={e=>set("description",e.target.value)} placeholder="Event details…" />
+            <textarea
+              className="form-textarea"
+              value={form.description || ""}
+              onChange={e => set("description", e.target.value)}
+              placeholder="Event details…"
+            />
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving…" : "Save Event"}</button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? "Saving…" : "Save Event"}
+            </button>
           </div>
         </form>
       </div>
@@ -57,16 +98,28 @@ function EventModal({ initial, onClose, onSaved }) {
 }
 
 export default function Events() {
-  const [events, setEvents]   = useState([]);
+  const [events,  setEvents]  = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal]     = useState(null);
+  const [modal,   setModal]   = useState(null);
 
-  const load = () => { setLoading(true); getEvents().then(r => setEvents(r.data)).finally(() => setLoading(false)); };
+  const load = () => {
+    setLoading(true);
+    getEvents()
+      .then(r => setEvents(r.data))
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => { load(); }, []);
 
   const drop = async (id) => {
     if (!window.confirm("Delete this event?")) return;
-    try { await deleteEvent(id); toast.success("Deleted"); load(); } catch { toast.error("Delete failed"); }
+    try {
+      await deleteEvent(id);
+      toast.success("Deleted");
+      load();
+    } catch {
+      toast.error("Delete failed");
+    }
   };
 
   return (
@@ -79,13 +132,22 @@ export default function Events() {
       {loading
         ? <div className="loading-center"><div className="spinner" /></div>
         : events.length === 0
-          ? <div className="empty"><div className="empty-icon">🎪</div><h3>No events yet</h3><p>Create your first event to start managing attendees</p></div>
+          ? <div className="empty">
+              <div className="empty-icon">🎪</div>
+              <h3>No events yet</h3>
+              <p>Create your first event to start managing attendees</p>
+            </div>
           : <div className="card">
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>#</th><th>Name</th><th>Date</th><th>Location</th><th>Description</th><th>Actions</th>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Date</th>
+                      <th>Location</th>
+                      <th>Description</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -93,9 +155,17 @@ export default function Events() {
                       <tr key={ev.id}>
                         <td><span className="badge badge-purple">{ev.id}</span></td>
                         <td style={{ fontWeight: 600 }}>{ev.name}</td>
-                        <td>{ev.date ? new Date(ev.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }) : "—"}</td>
+                        <td>
+                          {ev.date
+                            ? new Date(ev.date).toLocaleDateString("en-IN", {
+                                day: "2-digit", month: "short", year: "numeric"
+                              })
+                            : "—"}
+                        </td>
                         <td>{ev.location || "—"}</td>
-                        <td style={{ color: "var(--muted)", maxWidth: 200 }}>{ev.description?.slice(0, 60) || "—"}</td>
+                        <td style={{ color: "var(--muted)", maxWidth: 200 }}>
+                          {ev.description?.slice(0, 60) || "—"}
+                        </td>
                         <td>
                           <div style={{ display: "flex", gap: 8 }}>
                             <button className="btn btn-ghost btn-sm" onClick={() => setModal(ev)}>✏️ Edit</button>
