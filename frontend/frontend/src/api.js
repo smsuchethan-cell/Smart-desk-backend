@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE = "http://localhost:8000/api/v1";
+const BASE = "https://smart-desk-backend-qtx5.onrender.com/api/v1";
 
 const api = axios.create({ baseURL: BASE });
 

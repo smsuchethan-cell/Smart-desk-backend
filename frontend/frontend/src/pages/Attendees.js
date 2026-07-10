@@ -3,7 +3,7 @@ import { getAttendees, getEvents, checkinAttendee } from "../api";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-const BASE  = "http://localhost:8000";
+const BASE = "https://smart-desk-backend-qtx5.onrender.com";
 const EMPTY = { name: "", company: "", email: "", designation: "", event_id: "" };
 
 // ── Register Modal ─────────────────────────────────────────────────────────
