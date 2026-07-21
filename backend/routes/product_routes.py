@@ -36,6 +36,24 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db)):
     return product
 
 
+@router.post("/products/{product_id}/regenerate-qr", response_model=ProductResponse)
+def regenerate_qr(product_id: int, db: Session = Depends(get_db)):
+    """Re-generate a product's QR code with the current format/FRONTEND_URL.
+    Needed for products created before the QR format changed to a link."""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    qr_path = generate_qr(
+        data=f"{FRONTEND_URL}/products/{product.id}",
+        filename=f"product_{product.id}"
+    )
+    product.qr_code_path = qr_path
+    db.commit()
+    db.refresh(product)
+    return product
+
+
 @router.get("/products", response_model=List[ProductResponse])
 def list_products(db: Session = Depends(get_db)):
     return db.query(Product).order_by(Product.created_at.desc()).all()
