@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const ROOT = "https://smart-desk-backend-qtx5.onrender.com";
+export const ROOT = "https://smart-desk-backend-qtx5.onrender.com";
 const BASE = `${ROOT}/api/v1`;
 
 const api = axios.create({ baseURL: BASE });
@@ -46,6 +46,8 @@ export const getTopProducts      = ()   => api.get("/analytics/top-products");
 export const getAttendanceStats  = ()   => api.get("/analytics/attendance");
 export const getAttendanceSummary = ()  => api.get("/analytics/attendance-summary");
 export const getGpsLocation = () => api.get("/stall/gps");
+export const getHourlyTraffic  = ()      => api.get("/analytics/hourly-traffic");
+export const getRecentCheckins = (limit=10) => api.get("/analytics/recent-checkins", { params: { limit } });
 
 // ── Stall Counter ────────────────────────────────────────────
 export const getStallCount = ()  => api.get("/stall/count");   // ← NEW

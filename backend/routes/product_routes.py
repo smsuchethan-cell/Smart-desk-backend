@@ -6,8 +6,14 @@ from models.scan_log import ScanLog
 from schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from utils.qr_generator import generate_qr
 from typing import List
+import os
 
 router = APIRouter()
+
+# Public frontend origin — product QR codes link here so a visitor's own
+# phone camera opens the product page (with its enquiry form) directly.
+# Override via the FRONTEND_URL env var if the deployed frontend URL changes.
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://smart-desk-backend-1.onrender.com").rstrip("/")
 
 
 @router.post("/products", response_model=ProductResponse)
@@ -17,9 +23,11 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(product)
 
-    # Auto-generate QR code that encodes the product scan URL
+    # Auto-generate QR code that links to the public product page, so a
+    # visitor's own phone camera opens it directly (desk USB scanner input
+    # still works — qr_routes parses the product id back out of the URL).
     qr_path = generate_qr(
-        data=f"PRODUCT:{product.id}",
+        data=f"{FRONTEND_URL}/products/{product.id}",
         filename=f"product_{product.id}"
     )
     product.qr_code_path = qr_path

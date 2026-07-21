@@ -96,19 +96,21 @@ def summary(db: Session = Depends(get_db)):
 def attendance_summary(db: Session = Depends(get_db)):
     today = date.today()
 
+    # Bucket by the actual check-in timestamp rather than the event's
+    # (optional, manually-entered) date field, so two events running at once
+    # both count correctly even if one has no date set.
+
     # 1. Unique people who checked in today
     today_count = (
         db.query(func.count(distinct(Attendance.attendee_id)))
-        .join(Event, Event.id == Attendance.event_id)
-        .filter(Event.date == str(today))   # ← fixed
+        .filter(func.date(Attendance.checked_in_at) == today)
         .scalar()
     )
 
-    # 2. All check-ins from past events (before today)
+    # 2. All check-ins from before today
     previous_total = (
         db.query(func.count(Attendance.id))
-        .join(Event, Event.id == Attendance.event_id)
-        .filter(Event.date < str(today))    # ← fixed
+        .filter(func.date(Attendance.checked_in_at) < today)
         .scalar()
     )
 
@@ -124,3 +126,43 @@ def attendance_summary(db: Session = Depends(get_db)):
         "total_unique_people": total_unique_people or 0,
         "all_time_total":      all_time_total or 0,
     }
+
+
+@router.get("/analytics/hourly-traffic")
+def hourly_traffic(db: Session = Depends(get_db)):
+    """Today's check-ins bucketed by hour of day (0-23), zero-filled for a clean chart."""
+    today = date.today()
+    results = (
+        db.query(
+            func.extract("hour", Attendance.checked_in_at).label("hour"),
+            func.count(Attendance.id).label("count"),
+        )
+        .filter(func.date(Attendance.checked_in_at) == today)
+        .group_by("hour")
+        .all()
+    )
+    counts = {int(r.hour): r.count for r in results}
+    return [{"hour": h, "checkins": counts.get(h, 0)} for h in range(24)]
+
+
+@router.get("/analytics/recent-checkins")
+def recent_checkins(limit: int = 10, db: Session = Depends(get_db)):
+    """Most recent check-ins across all events, for real-time dashboard alerts."""
+    results = (
+        db.query(Attendance, Attendee, Event)
+        .join(Attendee, Attendee.id == Attendance.attendee_id)
+        .join(Event, Event.id == Attendance.event_id)
+        .order_by(Attendance.checked_in_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "attendance_id": att.id,
+            "attendee_name": a.name,
+            "company":       a.company,
+            "event_name":    ev.name,
+            "checked_in_at": att.checked_in_at,
+        }
+        for att, a, ev in results
+    ]

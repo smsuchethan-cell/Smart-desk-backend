@@ -145,7 +145,7 @@ function CheckInModal({ attendee, onClose }) {
           <div style={{ textAlign: "center" }}>
             {/* Photo */}
             {attendee.photo_path
-              ? <img src={`${BASE}/${attendee.photo_path}`} alt="photo"
+              ? <img src={`${BASE}/${attendee.photo_path}`} alt={attendee.name}
                   style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover",
                            border: "3px solid var(--accent)", marginBottom: 12 }} />
               : <div style={{ fontSize: 48, marginBottom: 12 }}>👤</div>
@@ -237,6 +237,13 @@ export default function Attendees() {
             🔗 Copy Reg Link
           </button>
 
+          <a
+            className="btn btn-ghost btn-sm"
+            href={`${BASE}/api/v1/attendees/export${filterEvent ? `?event_id=${filterEvent}` : ""}`}
+          >
+            ⬇ Export Excel
+          </a>
+
           <button className="btn btn-primary" onClick={() => setModal("register")}>+ Register</button>
         </div>
       </div>
@@ -272,7 +279,7 @@ export default function Attendees() {
                         <td><span className="badge badge-purple">{a.id}</span></td>
                         <td>
                           {a.photo_path
-                            ? <img src={`${BASE}/${a.photo_path}`} alt="photo"
+                            ? <img src={`${BASE}/${a.photo_path}`} alt={a.name}
                                 style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
                             : <span style={{ fontSize: 24 }}>👤</span>
                           }

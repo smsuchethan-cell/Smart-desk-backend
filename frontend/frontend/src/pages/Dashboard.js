@@ -6,6 +6,7 @@ import {
   getAttendanceSummary,
   getStallCount,
   getGpsLocation,
+  getHourlyTraffic,
 } from "../api";
 
 import {
@@ -61,6 +62,7 @@ export default function Dashboard() {
 
   const [scans, setScans] = useState([]);
   const [attend, setAttend] = useState([]);
+  const [hourly, setHourly] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
 
@@ -72,8 +74,9 @@ export default function Dashboard() {
       getAttendanceSummary(),
       getStallCount(),
       getGpsLocation(),
+      getHourlyTraffic(),
     ])
-      .then(([s, sc, at, attSum, stall, gpsData]) => {
+      .then(([s, sc, at, attSum, stall, gpsData, hourlyData]) => {
         if (s.status === "fulfilled")
           setSummary(s.value.data);
 
@@ -86,6 +89,14 @@ export default function Dashboard() {
         // NEW
         if (gpsData.status === "fulfilled")
           setGps(gpsData.value.data);
+
+        if (hourlyData.status === "fulfilled")
+          setHourly(
+            hourlyData.value.data.map((r) => ({
+              name: `${r.hour}:00`,
+              checkins: r.checkins,
+            }))
+          );
 
         if (sc.status === "fulfilled")
           setScans(
@@ -382,6 +393,40 @@ export default function Dashboard() {
           >
             Waiting for GPS...
           </div>
+        )}
+      </div>
+
+      {/* ── Peak Hours ── */}
+
+      <div style={{ margin: "20px 0 8px" }}>
+        <h3
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: "var(--muted)",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          🔥 Live Visitor Heatmap — Today's Peak Hours
+        </h3>
+      </div>
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        {hourly.every((h) => h.checkins === 0) ? (
+          <p style={{ color: "var(--muted)", textAlign: "center", padding: "32px 0" }}>
+            No check-ins yet today
+          </p>
+        ) : (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={hourly} margin={{ left: -10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a45" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: "#7a7a9a", fontSize: 10 }} axisLine={false} tickLine={false} interval={1} />
+              <YAxis tick={{ fill: "#7a7a9a", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="checkins" fill="#ff6b6b" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         )}
       </div>
 

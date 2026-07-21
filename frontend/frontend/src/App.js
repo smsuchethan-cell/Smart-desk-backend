@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import { getRecentCheckins } from "./api";
 import "./index.css";
 
 // Pages
@@ -11,6 +13,43 @@ import ProductView   from "./pages/ProductView";
 import Events        from "./pages/Events";
 import Attendees     from "./pages/Attendees";
 import Enquiries     from "./pages/Enquiries";
+
+const CHECKIN_POLL_MS = 8000;
+
+// Polls recent check-ins and toasts any that appear after the first poll
+// (which just establishes a baseline, so old check-ins don't all fire at once).
+function useCheckinNotifications() {
+  const lastSeenId = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const { data } = await getRecentCheckins(5);
+        if (cancelled || !data.length) return;
+
+        if (lastSeenId.current === null) {
+          lastSeenId.current = data[0].attendance_id;
+          return;
+        }
+
+        data
+          .filter((d) => d.attendance_id > lastSeenId.current)
+          .reverse()
+          .forEach((d) => toast.success(`✅ ${d.attendee_name} checked in — ${d.event_name}`));
+
+        lastSeenId.current = Math.max(lastSeenId.current, data[0].attendance_id);
+      } catch {
+        // ignore — next poll will retry
+      }
+    };
+
+    poll();
+    const timer = setInterval(poll, CHECKIN_POLL_MS);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, []);
+}
 
 function Sidebar() {
   return (
@@ -33,6 +72,8 @@ function Sidebar() {
 }
 
 export default function App() {
+  useCheckinNotifications();
+
   return (
     <BrowserRouter>
       <div className="app">

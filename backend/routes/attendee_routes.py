@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from database.db import get_db
 from models.attendee import Attendee
@@ -9,6 +9,8 @@ from schemas.attendee import AttendeeResponse, CheckInResponse
 from utils.qr_generator import generate_qr
 from utils.badge_generator import generate_badge
 from utils.mailer import send_registration_email
+from openpyxl import Workbook
+from io import BytesIO
 import uuid, os, shutil
 
 router = APIRouter()
@@ -87,6 +89,51 @@ def list_attendees(event_id: int = None, db: Session = Depends(get_db)):
     if event_id:
         query = query.filter(Attendee.event_id == event_id)
     return query.order_by(Attendee.registered_at.desc()).all()
+
+
+# ── Export to Excel ─────────────────────────────────────────────────────────
+# Must be declared before /attendees/{attendee_id} — otherwise FastAPI tries
+# to parse "export" as an int attendee_id and 422s instead of matching this route.
+@router.get("/attendees/export")
+def export_attendees(event_id: int = None, db: Session = Depends(get_db)):
+    query = db.query(Attendee)
+    if event_id:
+        query = query.filter(Attendee.event_id == event_id)
+    attendees = query.order_by(Attendee.registered_at.desc()).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Attendees"
+    ws.append([
+        "ID", "Name", "Company", "Email", "Designation", "Event",
+        "Unique Code", "QR ID", "Registered At", "Checked In At", "Badge Printed",
+    ])
+
+    for a in attendees:
+        attendance = a.attendance
+        ws.append([
+            a.id,
+            a.name,
+            a.company or "",
+            a.email,
+            a.designation or "",
+            a.event.name if a.event else "",
+            a.unique_code or "",
+            a.qr_id,
+            a.registered_at.strftime("%Y-%m-%d %H:%M") if a.registered_at else "",
+            attendance.checked_in_at.strftime("%Y-%m-%d %H:%M") if attendance and attendance.checked_in_at else "",
+            "Yes" if attendance and attendance.badge_printed else "No",
+        ])
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=attendees.xlsx"},
+    )
 
 
 # ── Get one ───────────────────────────────────────────────────────────────────

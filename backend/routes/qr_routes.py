@@ -8,28 +8,38 @@ from models.scan_log import ScanLog
 from schemas.attendee import AttendeeResponse, CheckInResponse
 from schemas.product import ProductResponse
 from utils.badge_generator import generate_badge
+import re
 import uuid
 
 router = APIRouter()
+
+PRODUCT_URL_RE = re.compile(r"/products/(\d+)")
+
+
+def _extract_product_id(qr_data: str):
+    """Accepts either the legacy 'PRODUCT:<id>' desk-scanner format or a
+    full product page URL (https://.../products/<id>) from a visitor's QR scan."""
+    if qr_data.startswith("PRODUCT:"):
+        try:
+            return int(qr_data.split(":", 1)[1])
+        except ValueError:
+            return None
+    match = PRODUCT_URL_RE.search(qr_data)
+    return int(match.group(1)) if match else None
 
 
 @router.post("/qr/scan")
 def handle_qr_scan(qr_data: str, request: Request, db: Session = Depends(get_db)):
     """
     Unified QR scan handler.
-    - PRODUCT:<id>   → returns product info + logs scan
+    - PRODUCT:<id> or a product page URL → returns product info + logs scan
     - ATTENDEE:<qr_id> → checks in attendee, generates badge
     """
     qr_data = qr_data.strip()
+    product_id = _extract_product_id(qr_data)
 
     # ── Sub QR: Product ────────────────────────────────────────────────────────
-    if qr_data.startswith("PRODUCT:"):
-        product_id_str = qr_data.split(":", 1)[1]
-        try:
-            product_id = int(product_id_str)
-        except ValueError:
-            return {"success": False, "message": "Invalid product QR data"}
-
+    if product_id is not None:
         product = db.query(Product).filter(Product.id == product_id).first()
         if not product:
             return {"success": False, "message": "Product not found"}
