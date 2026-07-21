@@ -27,9 +27,14 @@ app = FastAPI(
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
+FRONTEND_ORIGINS = [
+    "https://smart-desk-backend-1.onrender.com",  # deployed React frontend (Render static site)
+    "http://localhost:3000",                      # local dev (react-scripts start)
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=FRONTEND_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

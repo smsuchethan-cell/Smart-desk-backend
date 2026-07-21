@@ -128,8 +128,6 @@ export default function Dashboard() {
       </div>
     );
 
-    console.log("GPS Data:", gps); // Debugging line to check GPS data
-
   return (
     <div className="page fade-in">
 

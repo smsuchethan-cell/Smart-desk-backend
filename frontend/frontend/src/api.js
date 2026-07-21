@@ -1,8 +1,19 @@
 import axios from "axios";
 
-const BASE = "https://smart-desk-backend-qtx5.onrender.com/api/v1";
+const ROOT = "https://smart-desk-backend-qtx5.onrender.com";
+const BASE = `${ROOT}/api/v1`;
 
 const api = axios.create({ baseURL: BASE });
+
+// ── Keep-alive ping ─────────────────────────────────────────
+// Render's free tier spins the backend down after ~15min idle, so the first
+// request after a sleep can take 30-60s. Pinging /health while the app is
+// open keeps it warm for the current visitor (doesn't help the very first
+// cold visitor of the day — that needs an external uptime pinger).
+const PING_INTERVAL_MS = 10 * 60 * 1000;
+const pingBackend = () => axios.get(`${ROOT}/health`, { timeout: 10000 }).catch(() => {});
+pingBackend();
+setInterval(pingBackend, PING_INTERVAL_MS);
 
 // ── Products ────────────────────────────────────────────────
 export const getProducts    = ()        => api.get("/products");
