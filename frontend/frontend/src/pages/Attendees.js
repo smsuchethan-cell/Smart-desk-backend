@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getAttendees, getEvents, checkinAttendee } from "../api";
+import { getAttendees, getEvents, checkinAttendee, deleteAttendee } from "../api";
 import { useMode } from "../context/ModeContext";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -216,6 +216,11 @@ export default function Attendees() {
 
   useEffect(() => { load(); }, [filterEvent]); // eslint-disable-line
 
+  const drop = async (id) => {
+    if (!window.confirm("Delete this attendee? This also removes their check-in record.")) return;
+    try { await deleteAttendee(id); toast.success("Deleted"); load(); } catch { toast.error("Delete failed"); }
+  };
+
   const filtered = attendees.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
     a.email.toLowerCase().includes(search.toLowerCase())
@@ -310,9 +315,12 @@ export default function Attendees() {
                           }
                         </td>
                         <td>
-                          <button className="btn btn-success btn-sm" onClick={() => setCheckin(a)}>
-                            ✅ Check In
-                          </button>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button className="btn btn-success btn-sm" onClick={() => setCheckin(a)}>
+                              ✅ Check In
+                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => drop(a.id)}>🗑</button>
+                          </div>
                         </td>
                       </tr>
                     ))}

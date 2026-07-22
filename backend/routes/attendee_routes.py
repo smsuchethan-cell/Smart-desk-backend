@@ -172,6 +172,22 @@ def get_attendee(attendee_id: int, db: Session = Depends(get_db)):
     return a
 
 
+# ── Delete ────────────────────────────────────────────────────────────────────
+@router.delete("/attendees/{attendee_id}")
+def delete_attendee(attendee_id: int, db: Session = Depends(get_db)):
+    attendee = db.query(Attendee).filter(Attendee.id == attendee_id).first()
+    if not attendee:
+        raise HTTPException(404, "Attendee not found")
+
+    # Explicit cleanup — same ON DELETE CASCADE reliability issue found and
+    # fixed on products/events/students applies here too.
+    db.query(Attendance).filter(Attendance.attendee_id == attendee_id).delete()
+
+    db.delete(attendee)
+    db.commit()
+    return {"message": f"Attendee {attendee_id} deleted"}
+
+
 # ── Check-in via QR ───────────────────────────────────────────────────────────
 @router.post("/attendees/checkin/{qr_id}", response_model=CheckInResponse)
 def checkin_attendee(qr_id: str, db: Session = Depends(get_db)):

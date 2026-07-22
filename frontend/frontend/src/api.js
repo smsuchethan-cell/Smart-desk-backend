@@ -33,6 +33,7 @@ export const deleteEvent    = (id)      => api.delete(`/events/${id}`);
 export const getAttendees     = (eventId) => api.get("/attendees", { params: { event_id: eventId } });
 export const registerAttendee = (data)    => api.post("/attendees/register", data);
 export const checkinAttendee  = (qrId)    => api.post(`/attendees/checkin/${qrId}`);
+export const deleteAttendee   = (id)      => api.delete(`/attendees/${id}`);
 export const getAttendeeByQr  = (qrId)    => api.get(`/attendees/qr/${qrId}`);
 
 // ── Enquiries ───────────────────────────────────────────────
