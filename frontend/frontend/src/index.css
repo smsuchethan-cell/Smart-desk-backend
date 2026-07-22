@@ -8,14 +8,21 @@
   --border:     #2a2a45;
   --accent:     #6c63ff;
   --accent2:    #00d4aa;
+  --accent-rgb:  108,99,255;
+  --accent2-rgb: 0,212,170;
   --danger:     #ff4d6d;
   --warning:    #ffb703;
+  --danger-rgb:  255,77,109;
+  --warning-rgb: 255,183,3;
   --text:       #e8e8f0;
   --muted:      #7a7a9a;
   --radius:     12px;
   --radius-lg:  20px;
   --shadow:     0 4px 32px rgba(0,0,0,0.4);
   --glow:       0 0 24px rgba(108,99,255,0.25);
+  --card-shadow: 0 4px 32px rgba(0,0,0,0.4);
+  --row-divider: rgba(255,255,255,0.04);
+  --row-hover:   rgba(255,255,255,0.02);
 }
 
 /* ── Reset ─────────────────────────────────────────────────── */
@@ -34,7 +41,7 @@ html, body, #root {
 /* ── Theme transition ──────────────────────────────────────────
    Mode switches change CSS variables at runtime (see ModeContext) —
    this makes the handoff feel like a fade rather than a hard cut. */
-body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
+body, .sidebar, .nav-link, .btn, .badge, .modal,
 .form-input, .form-select, .form-textarea, .product-card, th, td,
 .topbar, .search-input, .scan-input, .result-panel {
   transition: background-color 300ms ease, border-color 300ms ease,
@@ -88,7 +95,7 @@ body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
   transition: all 0.2s;
 }
 .nav-link:hover  { background: var(--surface2); color: var(--text); }
-.nav-link.active { background: rgba(108,99,255,0.15); color: var(--accent); }
+.nav-link.active { background: rgba(var(--accent-rgb),0.15); color: var(--accent); }
 .nav-link .icon  { font-size: 18px; width: 22px; text-align: center; }
 
 /* ── Topbar ─────────────────────────────────────────────────── */
@@ -102,9 +109,9 @@ body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
 }
 .topbar h1 { font-size: 20px; font-weight: 700; }
 .topbar-badge {
-  background: rgba(0,212,170,0.15);
+  background: rgba(var(--accent2-rgb),0.15);
   color: var(--accent2);
-  border: 1px solid rgba(0,212,170,0.3);
+  border: 1px solid rgba(var(--accent2-rgb),0.3);
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -112,16 +119,19 @@ body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
 }
 
 /* ── Cards ─────────────────────────────────────────────────── */
-/* --card-accent-left/top/glow are set per-mode in src/themes/*.js;
-   unset ones simply have no effect (each mode only uses the one it needs). */
+/* --card-accent-left/top are set per-mode in src/themes/*.js for the
+   School/Retail left-border and Event top-border treatments; --card-shadow
+   carries each mode's elevation (and, for Corporate, its glow too). */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: var(--card-accent-left, 1px solid var(--border));
   border-top: var(--card-accent-top, 1px solid var(--border));
   border-radius: var(--radius-lg);
-  box-shadow: var(--card-accent-glow, none);
+  box-shadow: var(--card-shadow);
   padding: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+              background-color 300ms ease, border-color 300ms ease, color 300ms ease;
 }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
 
@@ -131,10 +141,14 @@ body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
   padding: 20px 24px;
   position: relative;
   overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+              background-color 300ms ease, border-color 300ms ease, color 300ms ease;
 }
+.stat-card:hover { transform: translateY(-2px); }
 .stat-card::before {
   content: '';
   position: absolute;
@@ -164,9 +178,9 @@ body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
   text-decoration: none;
 }
 .btn-primary  { background: var(--accent); color: #fff; }
-.btn-primary:hover  { background: #7c73ff; box-shadow: 0 4px 20px rgba(108,99,255,0.4); transform: translateY(-1px); }
+.btn-primary:hover  { filter: brightness(1.1); box-shadow: 0 4px 20px rgba(var(--accent-rgb),0.4); transform: translateY(-1px); }
 .btn-success  { background: var(--accent2); color: #000; }
-.btn-success:hover  { background: #00ebb8; transform: translateY(-1px); }
+.btn-success:hover  { filter: brightness(1.1); transform: translateY(-1px); }
 .btn-danger   { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
 .btn-danger:hover   { background: var(--danger); color: #fff; }
 .btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
@@ -185,13 +199,13 @@ body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
   padding: 10px 14px;
   font-size: 14px;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background-color 300ms ease, color 300ms ease;
   width: 100%;
 }
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.15);
 }
 .form-textarea { min-height: 90px; resize: vertical; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -200,9 +214,9 @@ body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th { text-align: left; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
-td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; }
+td { padding: 14px 16px; border-bottom: 1px solid var(--row-divider); font-size: 14px; }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,0.02); }
+tr:hover td { background: var(--row-hover); }
 
 /* ── Modal ──────────────────────────────────────────────────── */
 .modal-overlay {
@@ -233,10 +247,10 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   padding: 3px 10px; border-radius: 20px;
   font-size: 12px; font-weight: 600;
 }
-.badge-green  { background: rgba(0,212,170,0.15); color: var(--accent2); }
-.badge-purple { background: rgba(108,99,255,0.15); color: var(--accent); }
-.badge-yellow { background: rgba(255,183,3,0.15); color: var(--warning); }
-.badge-red    { background: rgba(255,77,109,0.15); color: var(--danger); }
+.badge-green  { background: rgba(var(--accent2-rgb),0.15); color: var(--accent2); }
+.badge-purple { background: rgba(var(--accent-rgb),0.15); color: var(--accent); }
+.badge-yellow { background: rgba(var(--warning-rgb),0.15); color: var(--warning); }
+.badge-red    { background: rgba(var(--danger-rgb),0.15); color: var(--danger); }
 
 /* ── Product cards ──────────────────────────────────────────── */
 .product-card {
@@ -273,7 +287,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   background: var(--surface2); border: 2px solid var(--border); color: var(--text);
   border-radius: var(--radius); padding: 14px 20px; width: 100%; font-family: inherit;
 }
-.scan-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,0.2); }
+.scan-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.2); }
 
 /* ── Result panel ───────────────────────────────────────────── */
 .result-panel {
@@ -319,7 +333,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: var(--radius); color: var(--text);
   padding: 9px 14px; font-size: 14px; font-family: inherit;
-  width: 280px; transition: border-color 0.2s;
+  width: 280px; transition: border-color 0.2s, background-color 300ms ease, color 300ms ease;
 }
 .search-input:focus { outline: none; border-color: var(--accent); }
 
