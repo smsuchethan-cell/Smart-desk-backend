@@ -21,6 +21,21 @@ MATCH_THRESHOLD = 110
 # bad frame from re-triggering a "new person" a split-second later.
 MIN_REGISTRATION_GAP_S = 2
 
+# A face must fail to match for this many CONSECUTIVE frames before it's
+# confirmed as a genuinely new person — smooths over single transitional
+# frames (e.g. right after your hand uncovers the camera and the image is
+# briefly blurry/re-exposing). Note: this is a single shared counter, so if
+# two different new people appear in the same frame together, this simple
+# version won't track them independently — fine for a typical one-at-a-time
+# stall, a known limitation if you regularly get simultaneous new visitors.
+CONSECUTIVE_MISMATCH_REQUIRED = 3
+
+# Once a face is recognized, periodically add it as another training sample
+# for that same person (different angle/lighting/post-occlusion look) so
+# matching gets more robust over time instead of relying on one frozen
+# reference photo forever.
+ENRICH_INTERVAL_S = 3
+
 FACE_SIZE            = (200, 200)
 HEARTBEAT_INTERVAL_S = 15
 SEND_INTERVAL_S      = 5
@@ -39,30 +54,44 @@ recognizer   = cv2.face.LBPHFaceRecognizer_create()
 known_faces  = []
 known_labels = []
 trained      = False
+last_enrich  = {}  # label -> last time we added a fresh sample for them
 
-count             = 0
-today             = date.today()
-last_sent         = 0
-last_heartbeat    = 0
-last_registration = 0
+count               = 0
+today               = date.today()
+last_sent           = 0
+last_heartbeat      = 0
+last_registration   = 0
+pending_mismatches  = 0
 
 print("✅ Smart People Counter Started (face-based unique counting)")
 
 
 def check_face(face):
-    """Returns (is_known, confidence). confidence is None if nothing to compare against yet."""
+    """Returns (is_known, confidence, label). confidence/label are None if untrained."""
     if not trained:
-        return False, None
-    _, confidence = recognizer.predict(face)
-    return confidence <= MATCH_THRESHOLD, confidence
+        return False, None, None
+    label, confidence = recognizer.predict(face)
+    return confidence <= MATCH_THRESHOLD, confidence, label
 
 
 def register_face(face):
     global trained
+    label = len(known_labels)
     known_faces.append(face)
-    known_labels.append(len(known_labels))
+    known_labels.append(label)
     recognizer.train(known_faces, np.array(known_labels))
     trained = True
+    return label
+
+
+def enrich_face(label, face):
+    now = time.time()
+    if now - last_enrich.get(label, 0) < ENRICH_INTERVAL_S:
+        return
+    known_faces.append(face)
+    known_labels.append(label)
+    recognizer.train(known_faces, np.array(known_labels))
+    last_enrich[label] = now
 
 
 while True:
@@ -71,6 +100,7 @@ while True:
         today = date.today()
         known_faces.clear()
         known_labels.clear()
+        last_enrich.clear()
         trained = False
         count = 0
         print("🌙 New day — memory cleared, count reset to 0")
@@ -83,20 +113,27 @@ while True:
 
     for (x, y, w, h) in faces:
         face_img = cv2.resize(gray[y:y + h, x:x + w], FACE_SIZE)
-        is_known, confidence = check_face(face_img)
+        is_known, confidence, label = check_face(face_img)
 
         if is_known:
+            pending_mismatches = 0
+            enrich_face(label, face_img)
             color = (0, 255, 0)  # green = already counted today
             print(f"   (matched existing face — confidence {confidence:.1f}, threshold {MATCH_THRESHOLD})")
-        elif now - last_registration < MIN_REGISTRATION_GAP_S:
-            color = (0, 200, 255)  # yellow = skipped, too soon after last registration
         else:
-            conf_str = f"{confidence:.1f}" if confidence is not None else "n/a (first face)"
-            register_face(face_img)
-            last_registration = now
-            count += 1
-            color = (0, 140, 255)  # orange = just counted as new
-            print(f"✔ New person counted! Total: {count} (confidence was {conf_str}, threshold {MATCH_THRESHOLD})")
+            pending_mismatches += 1
+            if pending_mismatches < CONSECUTIVE_MISMATCH_REQUIRED:
+                color = (0, 200, 255)  # yellow = unmatched, waiting for confirmation
+            elif now - last_registration < MIN_REGISTRATION_GAP_S:
+                color = (0, 200, 255)  # yellow = confirmed-new but debounced
+            else:
+                conf_str = f"{confidence:.1f}" if confidence is not None else "n/a (first face)"
+                register_face(face_img)
+                last_registration = now
+                pending_mismatches = 0
+                count += 1
+                color = (0, 140, 255)  # orange = just counted as new
+                print(f"✔ New person counted! Total: {count} (confidence was {conf_str}, threshold {MATCH_THRESHOLD})")
 
         cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
 
