@@ -14,7 +14,7 @@ HEARTBEAT_URL = "https://smart-desk-backend-11.onrender.com/api/v1/stall/heartbe
 # above this threshold (so they keep getting re-counted), RAISE it to just
 # above what you're seeing. If two different people's numbers are both
 # below it (so they get merged into one), LOWER it.
-MATCH_THRESHOLD = 70
+MATCH_THRESHOLD = 110
 
 # Safety net: even with a good threshold, one noisy frame could momentarily
 # fail to match someone who was just registered — this stops that single
