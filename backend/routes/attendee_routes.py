@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from database.db import get_db
@@ -26,6 +26,7 @@ def make_unique_code() -> str:
 # ── Register ──────────────────────────────────────────────────────────────────
 @router.post("/attendees/register", response_model=AttendeeResponse)
 async def register_attendee(
+    background_tasks: BackgroundTasks,
     event_id:    int         = Form(...),
     name:        str         = Form(...),
     email:       str         = Form(...),
@@ -69,15 +70,15 @@ async def register_attendee(
     db.commit()
     db.refresh(attendee)
 
-    try:
-        send_registration_email(
-            to_email    = email,
-            name        = name,
-            unique_code = unique_code,
-            event_name  = event.name,
-        )
-    except Exception as e:
-        print(f"Email failed: {e}")
+    # Sent after the response goes out, so a slow/unreachable SMTP server
+    # can't block registration (it previously hung the request for ~40s).
+    background_tasks.add_task(
+        send_registration_email,
+        to_email=email,
+        name=name,
+        unique_code=unique_code,
+        event_name=event.name,
+    )
 
     return attendee
 

@@ -44,8 +44,11 @@ def send_registration_email(to_email: str, name: str, unique_code: str, event_na
     """
     msg.attach(MIMEText(html, "html"))
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
-        s.starttls()
-        s.login(SMTP_USER, SMTP_PASS)
-        s.sendmail(FROM_EMAIL, to_email, msg.as_string())
-    print(f"✅ Email sent to {to_email}")
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
+            s.starttls()
+            s.login(SMTP_USER, SMTP_PASS)
+            s.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        print(f"✅ Email sent to {to_email}")
+    except Exception as e:
+        print(f"Email failed: {e}")
