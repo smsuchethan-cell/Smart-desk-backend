@@ -12,3 +12,6 @@ from models.school_attendance import SchoolAttendance  # noqa
 from models.holiday import Holiday          # noqa
 from models.leave import Leave              # noqa
 from models.stall_status import StallStatus # noqa
+from models.employee import Employee        # noqa
+from models.employee_checkin import EmployeeCheckin  # noqa
+from models.meeting import Meeting          # noqa

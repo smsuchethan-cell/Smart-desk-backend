@@ -74,4 +74,18 @@ export const getLeaves   = (studentId) => api.get("/school/leaves", { params: { 
 export const createLeave = (data)      => api.post("/school/leaves", data);
 export const deleteLeave = (id)        => api.delete(`/school/leaves/${id}`);
 
+// ── Employees (Corporate mode) ────────────────────────────────
+export const getEmployees   = ()        => api.get("/employees");
+export const createEmployee = (formData)=> api.post("/employees", formData, { headers: { "Content-Type": "multipart/form-data" } });
+export const deleteEmployee = (id)      => api.delete(`/employees/${id}`);
+export const checkinEmployee = (id)     => api.post(`/employees/${id}/checkin`);
+export const getEmployeeCheckinsToday = () => api.get("/employees/checkins/today");
+export const getDepartmentBreakdown = () => api.get("/corporate/analytics/department-breakdown");
+
+// ── Meetings (Corporate mode) ─────────────────────────────────
+export const getMeetings       = () => api.get("/meetings");
+export const getMeetingsStatus = () => api.get("/meetings/status");
+export const createMeeting     = (data) => api.post("/meetings", data);
+export const deleteMeeting     = (id)   => api.delete(`/meetings/${id}`);
+
 export default api;

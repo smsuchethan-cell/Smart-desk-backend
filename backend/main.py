@@ -8,7 +8,7 @@ import qrcode
 from database.db import engine, Base
 
 # Import all models so SQLAlchemy registers them before create_all
-from models import product, event, attendee, attendance, scan_log, enquiry, student, school_attendance, holiday, leave, stall_status  # noqa
+from models import product, event, attendee, attendance, scan_log, enquiry, student, school_attendance, holiday, leave, stall_status, employee, employee_checkin, meeting  # noqa
 
 from routes import (
     product_routes,
@@ -20,6 +20,7 @@ from routes import (
     stall_routes,              # ← NEW
     student_routes,
     school_routes,
+    corporate_routes,
 )
 
 app = FastAPI(
@@ -47,6 +48,7 @@ os.makedirs("static/qr",       exist_ok=True)
 os.makedirs("static/badges",   exist_ok=True)
 os.makedirs("static/photos",   exist_ok=True)
 os.makedirs("static/students", exist_ok=True)
+os.makedirs("static/employees", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ── Create all DB tables ──────────────────────────────────────────────────────
@@ -62,6 +64,7 @@ app.include_router(qr_routes.router,        prefix="/api/v1", tags=["QR Scanner"
 app.include_router(stall_routes.router,     prefix="/api/v1", tags=["Stall"])  # ← NEW
 app.include_router(student_routes.router,   prefix="/api/v1", tags=["Students"])
 app.include_router(school_routes.router,    prefix="/api/v1", tags=["School"])
+app.include_router(corporate_routes.router, prefix="/api/v1", tags=["Corporate"])
 
 
 # ── Gate page (mobile) ────────────────────────────────────────────────────────

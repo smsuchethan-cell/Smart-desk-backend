@@ -22,7 +22,8 @@ import HolidayLeave    from "./pages/HolidayLeave";
 import Attendance      from "./pages/Attendance";
 import Footfall        from "./pages/Footfall";
 import Reports         from "./pages/Reports";
-import ComingSoon      from "./pages/ComingSoon";
+import Employees       from "./pages/Employees";
+import Meetings        from "./pages/Meetings";
 import ModeLanding     from "./pages/ModeLanding";
 
 const CHECKIN_POLL_MS = 8000;
@@ -185,8 +186,8 @@ function AdminShell() {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/footfall"   element={<Footfall />} />
           <Route path="/reports"    element={<Reports />} />
-          <Route path="/employees"  element={<ComingSoon />} />
-          <Route path="/meetings"   element={<ComingSoon />} />
+          <Route path="/employees"  element={<Employees />} />
+          <Route path="/meetings"   element={<Meetings />} />
         </Routes>
       </div>
     </div>
