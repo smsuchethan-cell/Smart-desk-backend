@@ -18,6 +18,10 @@ router = APIRouter()
 UPLOAD_DIR = "static/photos"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Public frontend origin — an attendee's QR links here so their own phone
+# camera shows a confirmation page instead of raw "ATTENDEE:<id>" text.
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://smart-desk-backend-1.onrender.com").rstrip("/")
+
 
 def make_unique_code() -> str:
     return str(uuid.uuid4()).replace("-", "").upper()[:6]
@@ -65,7 +69,7 @@ async def register_attendee(
     db.commit()
     db.refresh(attendee)
 
-    qr_path = generate_qr(data=f"ATTENDEE:{qr_id}", filename=f"attendee_{qr_id}")
+    qr_path = generate_qr(data=f"{FRONTEND_URL}/attendee/{qr_id}", filename=f"attendee_{qr_id}")
     attendee.qr_code_path = qr_path
     db.commit()
     db.refresh(attendee)
@@ -90,6 +94,28 @@ def list_attendees(event_id: int = None, db: Session = Depends(get_db)):
     if event_id:
         query = query.filter(Attendee.event_id == event_id)
     return query.order_by(Attendee.registered_at.desc()).all()
+
+
+# ── Public lookup by QR id ────────────────────────────────────────────────────
+# Powers the page a personal phone lands on when scanning an attendee's QR.
+# Deliberately returns a small public-safe subset, not the full AttendeeResponse.
+@router.get("/attendees/qr/{qr_id}")
+def get_attendee_by_qr(qr_id: str, db: Session = Depends(get_db)):
+    attendee = db.query(Attendee).filter(Attendee.qr_id == qr_id).first()
+    if not attendee:
+        raise HTTPException(404, "No registration found for this QR code")
+
+    event = db.query(Event).filter(Event.id == attendee.event_id).first()
+    checked_in = db.query(Attendance).filter(Attendance.attendee_id == attendee.id).first() is not None
+
+    return {
+        "name":        attendee.name,
+        "company":     attendee.company,
+        "designation": attendee.designation,
+        "event_name":  event.name if event else None,
+        "unique_code": attendee.unique_code,
+        "checked_in":  checked_in,
+    }
 
 
 # ── Export to Excel ─────────────────────────────────────────────────────────

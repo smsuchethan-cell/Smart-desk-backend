@@ -12,6 +12,7 @@ import Products      from "./pages/Products";
 import ProductView   from "./pages/ProductView";
 import Events        from "./pages/Events";
 import Attendees     from "./pages/Attendees";
+import AttendeeView  from "./pages/AttendeeView";
 import Enquiries     from "./pages/Enquiries";
 
 const CHECKIN_POLL_MS = 8000;
@@ -86,6 +87,7 @@ export default function App() {
             <Route path="/products/:id" element={<ProductView />} />
             <Route path="/events"     element={<Events />} />
             <Route path="/attendees"  element={<Attendees />} />
+            <Route path="/attendee/:qrId" element={<AttendeeView />} />
             <Route path="/enquiries"  element={<Enquiries />} />
           </Routes>
         </div>

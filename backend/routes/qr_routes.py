@@ -4,6 +4,7 @@ from database.db import get_db
 from models.product import Product
 from models.attendee import Attendee
 from models.attendance import Attendance
+from models.event import Event
 from models.scan_log import ScanLog
 from schemas.attendee import AttendeeResponse, CheckInResponse
 from schemas.product import ProductResponse
@@ -13,7 +14,8 @@ import uuid
 
 router = APIRouter()
 
-PRODUCT_URL_RE = re.compile(r"/products/(\d+)")
+PRODUCT_URL_RE  = re.compile(r"/products/(\d+)")
+ATTENDEE_URL_RE = re.compile(r"/attendee/([^/\s]+)")
 
 
 def _extract_product_id(qr_data: str):
@@ -26,6 +28,15 @@ def _extract_product_id(qr_data: str):
             return None
     match = PRODUCT_URL_RE.search(qr_data)
     return int(match.group(1)) if match else None
+
+
+def _extract_attendee_qr_id(qr_data: str):
+    """Accepts either the legacy 'ATTENDEE:<qr_id>' desk-scanner format or a
+    full attendee page URL (https://.../attendee/<qr_id>) from a visitor's QR scan."""
+    if qr_data.startswith("ATTENDEE:"):
+        return qr_data.split(":", 1)[1]
+    match = ATTENDEE_URL_RE.search(qr_data)
+    return match.group(1) if match else None
 
 
 @router.post("/qr/scan")
@@ -59,9 +70,7 @@ def handle_qr_scan(qr_data: str, request: Request, db: Session = Depends(get_db)
         }
 
     # ── Master QR: Attendee ────────────────────────────────────────────────────
-    elif qr_data.startswith("ATTENDEE:"):
-        qr_id = qr_data.split(":", 1)[1]
-
+    elif (qr_id := _extract_attendee_qr_id(qr_data)) is not None:
         attendee = db.query(Attendee).filter(Attendee.qr_id == qr_id).first()
         if not attendee:
             return {
@@ -81,13 +90,18 @@ def handle_qr_scan(qr_data: str, request: Request, db: Session = Depends(get_db)
                 "data": AttendeeResponse.model_validate(attendee),
             }
 
+        event = db.query(Event).filter(Event.id == attendee.event_id).first()
+
         # Generate badge
         badge_path = generate_badge(
             name=attendee.name,
             company=attendee.company or "",
+            designation=attendee.designation or "",
             qr_id=attendee.qr_id,
             qr_code_path=attendee.qr_code_path,
-            photo_url=attendee.photo_url,
+            photo_path=attendee.photo_path,
+            event_name=event.name if event else "",
+            email=attendee.email or "",
         )
 
         # Record attendance
