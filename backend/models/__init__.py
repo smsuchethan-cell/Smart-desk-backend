@@ -9,3 +9,5 @@ from models.scan_log import ScanLog         # noqa
 from models.enquiry import Enquiry          # noqa
 from models.student import Student          # noqa
 from models.school_attendance import SchoolAttendance  # noqa
+from models.holiday import Holiday          # noqa
+from models.leave import Leave              # noqa

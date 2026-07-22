@@ -16,6 +16,8 @@ import Attendees     from "./pages/Attendees";
 import AttendeeView  from "./pages/AttendeeView";
 import Enquiries     from "./pages/Enquiries";
 import Students      from "./pages/Students";
+import SchoolAnalytics from "./pages/SchoolAnalytics";
+import HolidayLeave  from "./pages/HolidayLeave";
 
 const CHECKIN_POLL_MS = 8000;
 
@@ -95,6 +97,8 @@ function Sidebar() {
         <>
           <span className="sidebar-section">School</span>
           <NavLink to="/students" className={({isActive})=>"nav-link"+(isActive?" active":"")}><span className="icon">🎓</span>Students</NavLink>
+          <NavLink to="/school-analytics" className={({isActive})=>"nav-link"+(isActive?" active":"")}><span className="icon">📈</span>Analytics</NavLink>
+          <NavLink to="/holidays-leave" className={({isActive})=>"nav-link"+(isActive?" active":"")}><span className="icon">📅</span>Holidays & Leave</NavLink>
         </>
       )}
     </nav>
@@ -120,6 +124,8 @@ export default function App() {
               <Route path="/attendee/:qrId" element={<AttendeeView />} />
               <Route path="/enquiries"  element={<Enquiries />} />
               <Route path="/students"   element={<Students />} />
+              <Route path="/school-analytics" element={<SchoolAnalytics />} />
+              <Route path="/holidays-leave"   element={<HolidayLeave />} />
             </Routes>
           </div>
         </div>

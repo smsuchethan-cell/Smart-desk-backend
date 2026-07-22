@@ -61,5 +61,16 @@ export const getStudents   = (classSection) => api.get("/students", { params: { 
 export const createStudent = (formData)     => api.post("/students", formData, { headers: { "Content-Type": "multipart/form-data" } });
 export const deleteStudent = (id)           => api.delete(`/students/${id}`);
 export const getTodayAttendance = () => api.get("/school/attendance/today");
+export const getClassBreakdown  = () => api.get("/school/analytics/class-breakdown");
+
+// ── Holidays (School mode) ───────────────────────────────────
+export const getHolidays   = ()     => api.get("/school/holidays");
+export const createHoliday = (data) => api.post("/school/holidays", data);
+export const deleteHoliday = (id)   => api.delete(`/school/holidays/${id}`);
+
+// ── Leaves (School mode) ──────────────────────────────────────
+export const getLeaves   = (studentId) => api.get("/school/leaves", { params: { student_id: studentId } });
+export const createLeave = (data)      => api.post("/school/leaves", data);
+export const deleteLeave = (id)        => api.delete(`/school/leaves/${id}`);
 
 export default api;
