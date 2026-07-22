@@ -8,6 +8,7 @@ class AttendeeCreate(BaseModel):
     name:        str
     company:     Optional[str] = None
     email:       str
+    phone:       Optional[str] = None
     designation: Optional[str] = None
 
 
@@ -17,6 +18,7 @@ class AttendeeResponse(BaseModel):
     name:          str
     company:       Optional[str]
     email:         str
+    phone:         Optional[str] = None
     designation:   Optional[str]
     unique_code:   Optional[str]
     qr_id:         str

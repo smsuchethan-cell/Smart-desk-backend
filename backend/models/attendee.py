@@ -12,6 +12,7 @@ class Attendee(Base):
     name          = Column(String(255), nullable=False)
     company       = Column(String(255))
     email         = Column(String(255), nullable=False)
+    phone         = Column(String(50))
     designation   = Column(String(255))
     unique_code   = Column(String(20), unique=True)
     qr_id         = Column(String(100), unique=True, nullable=False)

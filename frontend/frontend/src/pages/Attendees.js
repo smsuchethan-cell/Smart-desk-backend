@@ -5,7 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const BASE = "https://smart-desk-backend-11.onrender.com";
-const EMPTY = { name: "", company: "", email: "", designation: "", event_id: "" };
+const EMPTY = { name: "", company: "", email: "", phone: "", designation: "", event_id: "" };
 
 // ── Register Modal ─────────────────────────────────────────────────────────
 function RegisterModal({ events, onClose, onSaved }) {
@@ -35,6 +35,7 @@ function RegisterModal({ events, onClose, onSaved }) {
       fd.append("event_id",    form.event_id);
       fd.append("name",        form.name);
       fd.append("email",       form.email);
+      fd.append("phone",       form.phone);
       fd.append("company",     form.company);
       fd.append("designation", form.designation);
       if (photo) fd.append("photo", photo);
@@ -42,7 +43,7 @@ function RegisterModal({ events, onClose, onSaved }) {
       await axios.post(`${BASE}/api/v1/attendees/register`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      toast.success("Registered! Unique code sent to email.");
+      toast.success("Registered! Unique code sent to email" + (form.phone.trim() ? " & WhatsApp" : "") + ".");
       onSaved();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Registration failed");
@@ -90,6 +91,12 @@ function RegisterModal({ events, onClose, onSaved }) {
               <label className="form-label">Designation</label>
               <input className="form-input" value={form.designation} onChange={e => set("designation", e.target.value)} placeholder="e.g. CEO, Developer" />
             </div>
+          </div>
+
+          {/* Phone */}
+          <div className="form-group">
+            <label className="form-label">Phone (WhatsApp)</label>
+            <input className="form-input" value={form.phone} onChange={e => set("phone", e.target.value)} placeholder="+91 98765 43210" />
           </div>
 
           {/* Photo upload */}

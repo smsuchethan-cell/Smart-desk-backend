@@ -9,6 +9,7 @@ from schemas.attendee import AttendeeResponse, CheckInResponse
 from utils.qr_generator import generate_qr
 from utils.badge_generator import generate_badge
 from utils.mailer import send_registration_email
+from utils.whatsapp import send_registration_whatsapp
 from openpyxl import Workbook
 from io import BytesIO
 import uuid, os, shutil
@@ -34,6 +35,7 @@ async def register_attendee(
     event_id:    int         = Form(...),
     name:        str         = Form(...),
     email:       str         = Form(...),
+    phone:       str         = Form(""),
     company:     str         = Form(""),
     designation: str         = Form(""),
     photo:       UploadFile  = File(None),
@@ -60,6 +62,7 @@ async def register_attendee(
         name        = name,
         company     = company,
         email       = email,
+        phone       = phone,
         designation = designation,
         unique_code = unique_code,
         qr_id       = qr_id,
@@ -79,6 +82,13 @@ async def register_attendee(
     background_tasks.add_task(
         send_registration_email,
         to_email=email,
+        name=name,
+        unique_code=unique_code,
+        event_name=event.name,
+    )
+    background_tasks.add_task(
+        send_registration_whatsapp,
+        to_phone=phone,
         name=name,
         unique_code=unique_code,
         event_name=event.name,

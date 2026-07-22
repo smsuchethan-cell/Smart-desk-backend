@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse
+from sqlalchemy import text
 import os, io, socket
 import qrcode
 
@@ -53,6 +54,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ── Create all DB tables ──────────────────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
+
+# ── Lightweight column migrations ───────────────────────────────────────────
+# create_all() only creates missing TABLES — it never alters columns on
+# tables that already exist. There's no Alembic set up in this project, so
+# new columns on pre-existing tables need to be added explicitly here.
+# Each statement is idempotent (safe to run on every startup).
+with engine.begin() as conn:
+    conn.execute(text("ALTER TABLE attendees ADD COLUMN IF NOT EXISTS phone VARCHAR(50)"))
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(product_routes.router,   prefix="/api/v1", tags=["Products"])
