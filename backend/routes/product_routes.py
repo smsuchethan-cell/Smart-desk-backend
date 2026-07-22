@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database.db import get_db
 from models.product import Product
 from models.scan_log import ScanLog
+from models.enquiry import Enquiry
 from schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from utils.qr_generator import generate_qr
 from typing import List
@@ -95,6 +96,13 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    # Explicit cleanup rather than relying on the DB's ON DELETE CASCADE —
+    # that constraint isn't actually enforced on tables created before it was
+    # added to the model, which made deleting any scanned product 500.
+    db.query(ScanLog).filter(ScanLog.product_id == product_id).delete()
+    db.query(Enquiry).filter(Enquiry.product_id == product_id).delete()
+
     db.delete(product)
     db.commit()
     return {"message": f"Product {product_id} deleted"}

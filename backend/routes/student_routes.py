@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from database.db import get_db
 from models.student import Student
+from models.school_attendance import SchoolAttendance
+from models.leave import Leave
 from schemas.student import StudentResponse
 from typing import List
 import uuid, os, shutil
@@ -65,6 +67,13 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(404, "Student not found")
+
+    # Explicit cleanup rather than relying on the DB's ON DELETE CASCADE —
+    # that constraint isn't actually enforced on tables created before it was
+    # added to the model (same issue found on product deletion).
+    db.query(SchoolAttendance).filter(SchoolAttendance.student_id == student_id).delete()
+    db.query(Leave).filter(Leave.student_id == student_id).delete()
+
     db.delete(student)
     db.commit()
     return {"message": f"Student {student_id} deleted"}
