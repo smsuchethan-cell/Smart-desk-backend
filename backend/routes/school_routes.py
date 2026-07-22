@@ -54,11 +54,24 @@ def mark_attendance(
     }
 
 
+def _students_on_leave_today(db: Session) -> dict:
+    """Returns {student_id: reason} for every student with an approved Leave
+    covering today's date."""
+    today = date.today()
+    rows = (
+        db.query(Leave)
+        .filter(Leave.date_from <= today, Leave.date_to >= today)
+        .all()
+    )
+    return {row.student_id: row.reason for row in rows}
+
+
 # ── Today's attendance report ─────────────────────────────────────────────────
 @router.get("/school/attendance/today")
 def today_attendance(db: Session = Depends(get_db)):
     today = date.today()
     total_students = db.query(Student).count()
+    on_leave_map = _students_on_leave_today(db)
 
     records = (
         db.query(SchoolAttendance, Student)
@@ -78,12 +91,30 @@ def today_attendance(db: Session = Depends(get_db)):
         }
         for rec, s in records
     ]
+    present_ids = {p["student_id"] for p in present}
+
+    # A student can't be both present and on leave — present takes priority
+    # (they showed up despite the leave request being on file).
+    on_leave = [
+        {
+            "student_id":   s.id,
+            "name":         s.name,
+            "roll_number":  s.roll_number,
+            "class_section": s.class_section,
+            "reason":       on_leave_map[s.id],
+        }
+        for s in db.query(Student).filter(Student.id.in_(on_leave_map.keys())).all()
+        if s.id not in present_ids
+    ]
+    on_leave_ids = {s["student_id"] for s in on_leave}
 
     return {
         "total_students": total_students,
         "present_count":  len(present),
-        "absent_count":   total_students - len(present),
+        "on_leave_count": len(on_leave),
+        "absent_count":   total_students - len(present) - len(on_leave),
         "present":        present,
+        "on_leave":       on_leave,
     }
 
 
@@ -92,6 +123,7 @@ def today_attendance(db: Session = Depends(get_db)):
 def class_breakdown(db: Session = Depends(get_db)):
     today = date.today()
     students = db.query(Student).all()
+    on_leave_map = _students_on_leave_today(db)
 
     present_student_ids = {
         row[0] for row in (
@@ -104,17 +136,20 @@ def class_breakdown(db: Session = Depends(get_db)):
     classes = {}
     for s in students:
         key = s.class_section or "Unassigned"
-        bucket = classes.setdefault(key, {"total": 0, "present": 0})
+        bucket = classes.setdefault(key, {"total": 0, "present": 0, "on_leave": 0})
         bucket["total"] += 1
         if s.id in present_student_ids:
             bucket["present"] += 1
+        elif s.id in on_leave_map:
+            bucket["on_leave"] += 1
 
     return [
         {
             "class_section": key,
             "total":         v["total"],
             "present":       v["present"],
-            "absent":        v["total"] - v["present"],
+            "on_leave":      v["on_leave"],
+            "absent":        v["total"] - v["present"] - v["on_leave"],
         }
         for key, v in sorted(classes.items())
     ]

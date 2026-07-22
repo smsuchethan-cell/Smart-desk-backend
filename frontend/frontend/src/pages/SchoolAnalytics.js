@@ -25,6 +25,8 @@ export default function SchoolAnalytics() {
 
   const totalStudents = breakdown.reduce((sum, c) => sum + c.total, 0);
   const totalPresent  = breakdown.reduce((sum, c) => sum + c.present, 0);
+  const totalOnLeave  = breakdown.reduce((sum, c) => sum + (c.on_leave || 0), 0);
+  const totalAbsent   = breakdown.reduce((sum, c) => sum + c.absent, 0);
 
   return (
     <div className="page fade-in">
@@ -49,15 +51,15 @@ export default function SchoolAnalytics() {
           <div className="stat-value">{totalPresent}</div>
           <div className="stat-icon">✅</div>
         </div>
+        <div className="stat-card yellow">
+          <div className="stat-label">On Leave</div>
+          <div className="stat-value">{totalOnLeave}</div>
+          <div className="stat-icon">📝</div>
+        </div>
         <div className="stat-card red">
           <div className="stat-label">Absent Today</div>
-          <div className="stat-value">{totalStudents - totalPresent}</div>
+          <div className="stat-value">{totalAbsent}</div>
           <div className="stat-icon">❌</div>
-        </div>
-        <div className="stat-card yellow">
-          <div className="stat-label">Classes</div>
-          <div className="stat-value">{breakdown.length}</div>
-          <div className="stat-icon">🏫</div>
         </div>
       </div>
 
@@ -78,8 +80,9 @@ export default function SchoolAnalytics() {
               <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="present" name="Present" fill="var(--accent2)" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="absent"  name="Absent"  fill="var(--danger)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="present"  name="Present"  fill="var(--accent2)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="on_leave" name="On Leave" fill="var(--warning)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="absent"   name="Absent"   fill="var(--danger)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -90,7 +93,7 @@ export default function SchoolAnalytics() {
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Class</th><th>Total</th><th>Present</th><th>Absent</th><th>Attendance %</th></tr>
+                <tr><th>Class</th><th>Total</th><th>Present</th><th>On Leave</th><th>Absent</th><th>Attendance %</th></tr>
               </thead>
               <tbody>
                 {breakdown.map(c => (
@@ -98,7 +101,8 @@ export default function SchoolAnalytics() {
                     <td style={{ fontWeight: 600 }}>{c.class_section}</td>
                     <td>{c.total}</td>
                     <td><span className="badge badge-green">{c.present}</span></td>
-                    <td><span className="badge badge-yellow">{c.absent}</span></td>
+                    <td><span className="badge badge-yellow">{c.on_leave || 0}</span></td>
+                    <td><span className="badge badge-red">{c.absent}</span></td>
                     <td>{c.total ? Math.round((c.present / c.total) * 100) : 0}%</td>
                   </tr>
                 ))}

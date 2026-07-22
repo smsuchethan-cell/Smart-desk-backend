@@ -33,6 +33,8 @@ export default function SchoolDashboard() {
 
   const total = attendance?.total_students || 0;
   const present = attendance?.present_count || 0;
+  const onLeave = attendance?.on_leave_count || 0;
+  const absent = attendance?.absent_count ?? Math.max(total - present - onLeave, 0);
   const percent = total ? (present / total) * 100 : 0;
   const recentPresent = (attendance?.present || []).slice(0, 6);
 
@@ -48,8 +50,8 @@ export default function SchoolDashboard() {
         <div className="stat-grid" style={{ flex: 1, marginBottom: 0 }}>
           <div className="stat-card"><div className="stat-label">Total Students</div><div className="stat-value">{total}</div><div className="stat-icon">🎓</div></div>
           <div className="stat-card green"><div className="stat-label">Present</div><div className="stat-value">{present}</div><div className="stat-icon">✅</div></div>
-          <div className="stat-card red"><div className="stat-label">Absent</div><div className="stat-value">{total - present}</div><div className="stat-icon">❌</div></div>
-          <div className="stat-card yellow"><div className="stat-label">Classes</div><div className="stat-value">{breakdown.length}</div><div className="stat-icon">🏫</div></div>
+          <div className="stat-card yellow"><div className="stat-label">On Leave</div><div className="stat-value">{onLeave}</div><div className="stat-icon">📝</div></div>
+          <div className="stat-card red"><div className="stat-label">Absent</div><div className="stat-value">{absent}</div><div className="stat-icon">❌</div></div>
         </div>
       </div>
 
