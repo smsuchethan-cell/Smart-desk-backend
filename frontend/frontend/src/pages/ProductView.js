@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getProduct, submitEnquiry } from "../api";
 import toast from "react-hot-toast";
 
-const BASE = "https://smart-desk-backend-qtx5.onrender.com";
+const BASE = "https://smart-desk-backend-11.onrender.com";
 
 export default function ProductView() {
   const { id } = useParams();

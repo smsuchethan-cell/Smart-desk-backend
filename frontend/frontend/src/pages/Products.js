@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const EMPTY_FORM = { name: "", description: "", price: "", specs: "", image_url: "", video_url: "" };
-const BASE = "https://smart-desk-backend-qtx5.onrender.com";
+const BASE = "https://smart-desk-backend-11.onrender.com";
 
 function ProductModal({ initial, onClose, onSaved }) {
   const [form, setForm] = useState(initial || EMPTY_FORM);

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { scanQR } from "../api";
 import toast from "react-hot-toast";
 
-const BASE = "https://smart-desk-backend-qtx5.onrender.com";
+const BASE = "https://smart-desk-backend-11.onrender.com";
 
 export default function QRScanner() {
   const [input, setInput]   = useState("");

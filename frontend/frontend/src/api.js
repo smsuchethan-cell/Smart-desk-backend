@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const ROOT = "https://smart-desk-backend-qtx5.onrender.com";
+export const ROOT = "https://smart-desk-backend-11.onrender.com";
 const BASE = `${ROOT}/api/v1`;
 
 const api = axios.create({ baseURL: BASE });
