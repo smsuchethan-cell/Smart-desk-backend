@@ -56,4 +56,10 @@ export const getStallCount = ()  => api.get("/stall/count");   // ← NEW
 // ── QR Scanner ──────────────────────────────────────────────
 export const scanQR = (qrData) => api.post(`/qr/scan?qr_data=${encodeURIComponent(qrData)}`);
 
+// ── Students (School mode) ───────────────────────────────────
+export const getStudents   = (classSection) => api.get("/students", { params: { class_section: classSection } });
+export const createStudent = (formData)     => api.post("/students", formData, { headers: { "Content-Type": "multipart/form-data" } });
+export const deleteStudent = (id)           => api.delete(`/students/${id}`);
+export const getTodayAttendance = () => api.get("/school/attendance/today");
+
 export default api;

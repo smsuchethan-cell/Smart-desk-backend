@@ -7,3 +7,5 @@ from models.attendee import Attendee        # noqa
 from models.attendance import Attendance    # noqa
 from models.scan_log import ScanLog         # noqa
 from models.enquiry import Enquiry          # noqa
+from models.student import Student          # noqa
+from models.school_attendance import SchoolAttendance  # noqa

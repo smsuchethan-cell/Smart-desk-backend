@@ -19,6 +19,8 @@ import {
   CartesianGrid,
 } from "recharts";
 
+import { useMode, MODES } from "../ModeContext";
+
 const REFRESH_INTERVAL = 10000;
 
 function StatCard({ label, value, icon, color }) {
@@ -53,6 +55,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
+  const { mode } = useMode();
   const [summary, setSummary] = useState(null);
   const [attendance, setAttendance] = useState(null);
   const [stallCount, setStallCount] = useState(null);
@@ -154,6 +157,10 @@ export default function Dashboard() {
             gap: 10,
           }}
         >
+          <span className="badge badge-purple">
+            {MODES.find((m) => m.key === mode)?.label || mode} Mode
+          </span>
+
           {lastRefresh && (
             <span
               style={{

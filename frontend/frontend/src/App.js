@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { getRecentCheckins } from "./api";
+import { ModeProvider, useMode, MODES } from "./ModeContext";
 import "./index.css";
 
 // Pages
@@ -14,6 +15,7 @@ import Events        from "./pages/Events";
 import Attendees     from "./pages/Attendees";
 import AttendeeView  from "./pages/AttendeeView";
 import Enquiries     from "./pages/Enquiries";
+import Students      from "./pages/Students";
 
 const CHECKIN_POLL_MS = 8000;
 
@@ -52,10 +54,30 @@ function useCheckinNotifications() {
   }, []);
 }
 
+function ModeSelector() {
+  const { mode, setMode } = useMode();
+  return (
+    <select
+      className="form-select"
+      value={mode}
+      onChange={(e) => setMode(e.target.value)}
+      style={{ width: "100%", marginBottom: 16 }}
+    >
+      {MODES.map((m) => (
+        <option key={m.key} value={m.key}>{m.label}</option>
+      ))}
+    </select>
+  );
+}
+
 function Sidebar() {
+  const { mode } = useMode();
+
   return (
     <nav className="sidebar">
       <div className="sidebar-logo">Smart<span>Desk</span> 2.0</div>
+
+      <ModeSelector />
 
       <span className="sidebar-section">Main</span>
       <NavLink to="/"          className={({isActive})=>"nav-link"+(isActive?" active":"")} end><span className="icon">📊</span>Dashboard</NavLink>
@@ -68,6 +90,13 @@ function Sidebar() {
       <span className="sidebar-section">Events</span>
       <NavLink to="/events"    className={({isActive})=>"nav-link"+(isActive?" active":"")}><span className="icon">🎪</span>Events</NavLink>
       <NavLink to="/attendees" className={({isActive})=>"nav-link"+(isActive?" active":"")}><span className="icon">👥</span>Attendees</NavLink>
+
+      {mode === "School" && (
+        <>
+          <span className="sidebar-section">School</span>
+          <NavLink to="/students" className={({isActive})=>"nav-link"+(isActive?" active":"")}><span className="icon">🎓</span>Students</NavLink>
+        </>
+      )}
     </nav>
   );
 }
@@ -76,28 +105,31 @@ export default function App() {
   useCheckinNotifications();
 
   return (
-    <BrowserRouter>
-      <div className="app">
-        <Sidebar />
-        <div className="main">
-          <Routes>
-            <Route path="/"           element={<Dashboard />} />
-            <Route path="/scanner"    element={<QRScanner />} />
-            <Route path="/products"   element={<Products />} />
-            <Route path="/products/:id" element={<ProductView />} />
-            <Route path="/events"     element={<Events />} />
-            <Route path="/attendees"  element={<Attendees />} />
-            <Route path="/attendee/:qrId" element={<AttendeeView />} />
-            <Route path="/enquiries"  element={<Enquiries />} />
-          </Routes>
+    <ModeProvider>
+      <BrowserRouter>
+        <div className="app">
+          <Sidebar />
+          <div className="main">
+            <Routes>
+              <Route path="/"           element={<Dashboard />} />
+              <Route path="/scanner"    element={<QRScanner />} />
+              <Route path="/products"   element={<Products />} />
+              <Route path="/products/:id" element={<ProductView />} />
+              <Route path="/events"     element={<Events />} />
+              <Route path="/attendees"  element={<Attendees />} />
+              <Route path="/attendee/:qrId" element={<AttendeeView />} />
+              <Route path="/enquiries"  element={<Enquiries />} />
+              <Route path="/students"   element={<Students />} />
+            </Routes>
+          </div>
         </div>
-      </div>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: { background: "#1a1a2e", color: "#e8e8f0", border: "1px solid #2a2a45" },
-        }}
-      />
-    </BrowserRouter>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: { background: "#1a1a2e", color: "#e8e8f0", border: "1px solid #2a2a45" },
+          }}
+        />
+      </BrowserRouter>
+    </ModeProvider>
   );
 }
