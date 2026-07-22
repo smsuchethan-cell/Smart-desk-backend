@@ -16,3 +16,7 @@ class Enquiry(Base):
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
 
     product = relationship("Product", backref="enquiries")
+
+    @property
+    def product_name(self):
+        return self.product.name if self.product else None

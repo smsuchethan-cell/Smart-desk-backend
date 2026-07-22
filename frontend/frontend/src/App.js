@@ -159,52 +159,59 @@ function Topbar() {
   );
 }
 
-function AppShell() {
+// The admin/internal experience — gated behind picking a mode, since the
+// sidebar, topbar, and every route here are staff-facing tools.
+function AdminShell() {
   const { mode } = useMode();
   useCheckinNotifications(mode);
 
   if (!mode) return <ModeLanding />;
 
   return (
-    <BrowserRouter>
-      <div className="app">
-        <Sidebar />
-        <div className="main">
-          <Topbar />
-          <Routes>
-            <Route path="/"           element={<Dashboard />} />
-            <Route path="/scanner"    element={<QRScanner />} />
-            <Route path="/products"   element={<Products />} />
-            <Route path="/products/:id" element={<ProductView />} />
-            <Route path="/events"     element={<Events />} />
-            <Route path="/attendees"  element={<Attendees />} />
-            <Route path="/attendee/:qrId" element={<AttendeeView />} />
-            <Route path="/enquiries"  element={<Enquiries />} />
-            <Route path="/students"   element={<Students />} />
-            <Route path="/school-analytics" element={<SchoolAnalytics />} />
-            <Route path="/holidays-leave"   element={<HolidayLeave />} />
-            <Route path="/attendance" element={<Attendance />} />
-            <Route path="/footfall"   element={<Footfall />} />
-            <Route path="/reports"    element={<Reports />} />
-            <Route path="/employees"  element={<ComingSoon />} />
-            <Route path="/meetings"   element={<ComingSoon />} />
-          </Routes>
-        </div>
+    <div className="app">
+      <Sidebar />
+      <div className="main">
+        <Topbar />
+        <Routes>
+          <Route path="/"           element={<Dashboard />} />
+          <Route path="/scanner"    element={<QRScanner />} />
+          <Route path="/products"   element={<Products />} />
+          <Route path="/events"     element={<Events />} />
+          <Route path="/attendees"  element={<Attendees />} />
+          <Route path="/enquiries"  element={<Enquiries />} />
+          <Route path="/students"   element={<Students />} />
+          <Route path="/school-analytics" element={<SchoolAnalytics />} />
+          <Route path="/holidays-leave"   element={<HolidayLeave />} />
+          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/footfall"   element={<Footfall />} />
+          <Route path="/reports"    element={<Reports />} />
+          <Route path="/employees"  element={<ComingSoon />} />
+          <Route path="/meetings"   element={<ComingSoon />} />
+        </Routes>
       </div>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: { background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" },
-        }}
-      />
-    </BrowserRouter>
+    </div>
   );
 }
 
 export default function App() {
   return (
     <ModeProvider>
-      <AppShell />
+      <BrowserRouter>
+        <Routes>
+          {/* Public — reachable by anyone scanning a QR with a fresh browser,
+              no mode ever chosen. Must not sit behind the mode gate. */}
+          <Route path="/products/:id"   element={<ProductView />} />
+          <Route path="/attendee/:qrId" element={<AttendeeView />} />
+          {/* Everything else is the staff-facing admin app. */}
+          <Route path="/*" element={<AdminShell />} />
+        </Routes>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: { background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" },
+          }}
+        />
+      </BrowserRouter>
     </ModeProvider>
   );
 }

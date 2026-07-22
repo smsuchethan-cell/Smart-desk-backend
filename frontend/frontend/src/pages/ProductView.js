@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 
 const BASE = "https://smart-desk-backend-11.onrender.com";
 
+const LEAD_POPUP_DELAY_MS = 5000;
+
 export default function ProductView() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -14,12 +16,24 @@ export default function ProductView() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [sending, setSending] = useState(false);
 
+  const [showLeadPopup, setShowLeadPopup] = useState(false);
+  const [leadDismissed, setLeadDismissed] = useState(false);
+  const [leadForm, setLeadForm] = useState({ name: "", phone: "", email: "" });
+  const [leadSending, setLeadSending] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+
   useEffect(() => {
     getProduct(id)
       .then(r => setProduct(r.data))
       .catch(() => toast.error("Product not found"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!product || leadDismissed) return;
+    const timer = setTimeout(() => setShowLeadPopup(true), LEAD_POPUP_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [product, leadDismissed]);
 
   const sendEnquiry = async (e) => {
     e.preventDefault();
@@ -32,6 +46,35 @@ export default function ProductView() {
       setForm({ name: "", email: "", phone: "", message: "" });
     } catch { toast.error("Failed to send enquiry"); }
     finally { setSending(false); }
+  };
+
+  const closeLeadPopup = () => {
+    setShowLeadPopup(false);
+    setLeadDismissed(true);
+  };
+
+  const sendLeadInterest = async (e) => {
+    e.preventDefault();
+    if (!leadForm.name.trim() || !leadForm.phone.trim()) {
+      toast.error("Name and phone are required");
+      return;
+    }
+    setLeadSending(true);
+    try {
+      await submitEnquiry({
+        name: leadForm.name,
+        phone: leadForm.phone,
+        email: leadForm.email,
+        product_id: parseInt(id),
+        message: "Interested via QR scan",
+      });
+      setLeadSubmitted(true);
+      setTimeout(() => { setShowLeadPopup(false); setLeadDismissed(true); }, 2000);
+    } catch {
+      toast.error("Something went wrong — please try again");
+    } finally {
+      setLeadSending(false);
+    }
   };
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>;
@@ -119,6 +162,43 @@ export default function ProductView() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Lead capture popup — auto-shows a few seconds after landing here from a QR scan */}
+      {showLeadPopup && (
+        <div className="lead-popup">
+          <button className="lead-popup-close" onClick={closeLeadPopup} aria-label="Close">✕</button>
+
+          {leadSubmitted ? (
+            <div className="lead-popup-success">Thank you! We'll contact you soon 🎉</div>
+          ) : (
+            <>
+              <div className="lead-popup-title">Interested in this product?</div>
+              <div className="lead-popup-subtitle">Leave your details, we'll get back to you</div>
+              <form onSubmit={sendLeadInterest}>
+                <input
+                  placeholder="Your name *"
+                  value={leadForm.name}
+                  onChange={e => setLeadForm(f => ({ ...f, name: e.target.value }))}
+                />
+                <input
+                  placeholder="Phone number *"
+                  value={leadForm.phone}
+                  onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
+                />
+                <input
+                  placeholder="Email (optional)"
+                  type="email"
+                  value={leadForm.email}
+                  onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
+                />
+                <button type="submit" className="lead-popup-submit" disabled={leadSending}>
+                  {leadSending ? "Sending…" : "Send Interest"}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       )}
     </div>

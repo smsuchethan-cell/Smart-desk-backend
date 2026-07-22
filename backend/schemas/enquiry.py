@@ -14,6 +14,7 @@ class EnquiryCreate(BaseModel):
 class EnquiryResponse(BaseModel):
     id: int
     product_id: int
+    product_name: Optional[str] = None
     name: str
     email: Optional[str]
     phone: Optional[str]

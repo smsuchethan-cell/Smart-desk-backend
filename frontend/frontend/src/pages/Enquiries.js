@@ -39,17 +39,24 @@ export default function Enquiries() {
               <div className="table-wrap">
                 <table>
                   <thead>
-                    <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Product ID</th><th>Date</th><th>Actions</th></tr>
+                    <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Product</th><th>Source</th><th>Date</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
-                    {filtered.map(e => (
+                    {filtered.map(e => {
+                      const fromQrScan = (e.message || "").toLowerCase().includes("qr scan");
+                      return (
                       <React.Fragment key={e.id}>
                         <tr style={{ cursor: "pointer" }} onClick={() => setExpanded(expanded === e.id ? null : e.id)}>
                           <td><span className="badge badge-yellow">{e.id}</span></td>
                           <td style={{ fontWeight: 600 }}>{e.name}</td>
                           <td style={{ color: "var(--muted)" }}>{e.email || "—"}</td>
                           <td>{e.phone || "—"}</td>
-                          <td><span className="badge badge-purple">#{e.product_id}</span></td>
+                          <td><span className="badge badge-purple">{e.product_name || `#${e.product_id}`}</span></td>
+                          <td>
+                            {fromQrScan
+                              ? <span className="badge badge-green">📱 QR Scan</span>
+                              : <span style={{ color: "var(--muted)" }}>Manual</span>}
+                          </td>
                           <td style={{ color: "var(--muted)", fontSize: 13 }}>
                             {e.created_at ? new Date(e.created_at).toLocaleDateString("en-IN") : "—"}
                           </td>
@@ -59,7 +66,7 @@ export default function Enquiries() {
                         </tr>
                         {expanded === e.id && e.message && (
                           <tr>
-                            <td colSpan={7} style={{ paddingTop: 0 }}>
+                            <td colSpan={8} style={{ paddingTop: 0 }}>
                               <div style={{
                                 background: "var(--surface2)", borderRadius: 8, padding: "12px 16px",
                                 color: "var(--muted)", fontSize: 14, lineHeight: 1.6,
@@ -72,7 +79,7 @@ export default function Enquiries() {
                           </tr>
                         )}
                       </React.Fragment>
-                    ))}
+                    );})}
                   </tbody>
                 </table>
               </div>
