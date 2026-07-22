@@ -31,6 +31,41 @@ def scan_analytics(db: Session = Depends(get_db)):
     ]
 
 
+@router.get("/analytics/revenue-potential")
+def revenue_potential(db: Session = Depends(get_db)):
+    """Theoretical revenue if every recorded scan became a sale — a simple,
+    honest 'ceiling' metric built purely from real scan counts and real
+    product prices, not a fabricated conversion-rate assumption."""
+    results = (
+        db.query(
+            Product.id,
+            Product.name,
+            Product.price,
+            func.count(ScanLog.id).label("total_scans"),
+        )
+        .join(ScanLog, ScanLog.product_id == Product.id, isouter=True)
+        .group_by(Product.id, Product.name, Product.price)
+        .all()
+    )
+
+    breakdown = [
+        {
+            "product_id":       r.id,
+            "product_name":     r.name,
+            "price":            r.price or 0,
+            "total_scans":      r.total_scans,
+            "revenue_potential": (r.price or 0) * r.total_scans,
+        }
+        for r in results
+    ]
+    breakdown.sort(key=lambda r: r["revenue_potential"], reverse=True)
+
+    return {
+        "total_revenue_potential": sum(r["revenue_potential"] for r in breakdown),
+        "products": breakdown,
+    }
+
+
 @router.get("/analytics/top-products")
 def top_products(limit: int = 5, db: Session = Depends(get_db)):
     results = (

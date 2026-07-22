@@ -50,6 +50,7 @@ export const getAttendanceSummary = ()  => api.get("/analytics/attendance-summar
 export const getGpsLocation = () => api.get("/stall/gps");
 export const getHourlyTraffic  = ()      => api.get("/analytics/hourly-traffic");
 export const getRecentCheckins = (limit=10) => api.get("/analytics/recent-checkins", { params: { limit } });
+export const getRevenuePotential = () => api.get("/analytics/revenue-potential");
 
 // ── Stall Counter ────────────────────────────────────────────
 export const getStallCount = ()  => api.get("/stall/count");   // ← NEW

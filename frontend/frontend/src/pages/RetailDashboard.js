@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { getStallCount, getHourlyTraffic, getScanStats, getSummary, getEnquiries } from "../api";
+import { getStallCount, getHourlyTraffic, getScanStats, getSummary, getEnquiries, getRevenuePotential } from "../api";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
@@ -12,17 +12,19 @@ export default function RetailDashboard() {
   const [scans, setScans] = useState([]);
   const [summary, setSummary] = useState(null);
   const [leadCount, setLeadCount] = useState(0);
+  const [revenue, setRevenue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
 
   const fetchAll = useCallback(() => {
-    Promise.allSettled([getStallCount(), getHourlyTraffic(), getScanStats(), getSummary(), getEnquiries()])
-      .then(([s, h, sc, sum, leads]) => {
+    Promise.allSettled([getStallCount(), getHourlyTraffic(), getScanStats(), getSummary(), getEnquiries(), getRevenuePotential()])
+      .then(([s, h, sc, sum, leads, rev]) => {
         if (s.status === "fulfilled") setStall(s.value.data);
         if (h.status === "fulfilled") setHourly(h.value.data.map(r => ({ name: `${r.hour}:00`, visitors: r.checkins })));
         if (sc.status === "fulfilled") setScans(sc.value.data.sort((a, b) => b.total_scans - a.total_scans).slice(0, 5));
         if (sum.status === "fulfilled") setSummary(sum.value.data);
         if (leads.status === "fulfilled") setLeadCount(leads.value.data.length);
+        if (rev.status === "fulfilled") setRevenue(rev.value.data);
         setLastRefresh(new Date().toLocaleTimeString());
       })
       .finally(() => setLoading(false));
@@ -68,6 +70,19 @@ export default function RetailDashboard() {
             </BarChart>
           </ResponsiveContainer>
         )}
+      </div>
+
+      <h3 className="section-label">💰 Revenue Potential</h3>
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 36, fontWeight: 800, color: "var(--accent2)" }}>
+            ₹{(revenue?.total_revenue_potential ?? 0).toLocaleString()}
+          </div>
+          <div style={{ color: "var(--muted)", fontSize: 13 }}>
+            if every recorded scan became a sale (price × scan count, summed across all products)
+          </div>
+        </div>
       </div>
 
       <h3 className="section-label">🏆 Top Scanned Products</h3>
