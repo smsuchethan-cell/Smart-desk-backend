@@ -8,7 +8,7 @@ import qrcode
 from database.db import engine, Base
 
 # Import all models so SQLAlchemy registers them before create_all
-from models import product, event, attendee, attendance, scan_log, enquiry, student, school_attendance, holiday, leave  # noqa
+from models import product, event, attendee, attendance, scan_log, enquiry, student, school_attendance, holiday, leave, stall_status  # noqa
 
 from routes import (
     product_routes,

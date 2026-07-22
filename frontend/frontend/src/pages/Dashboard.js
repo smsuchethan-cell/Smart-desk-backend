@@ -242,11 +242,9 @@ export default function Dashboard() {
 
           <div
             className="stat-value"
-            style={{ fontSize: 18, color: (stallCount?.today_count ?? 0) > 0 ? "var(--accent2)" : "var(--muted)" }}
+            style={{ fontSize: 18, color: stallCount?.camera_live ? "var(--accent2)" : "var(--muted)" }}
           >
-            {(stallCount?.today_count ?? 0) > 0
-              ? "🟢 LIVE"
-              : "⚪ WAITING"}
+            {stallCount?.camera_live ? "🟢 LIVE" : "⚪ OFFLINE"}
           </div>
 
           <div className="stat-icon">
