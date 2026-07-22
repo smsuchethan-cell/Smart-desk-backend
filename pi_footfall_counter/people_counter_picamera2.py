@@ -9,10 +9,17 @@ API_URL       = "https://smart-desk-backend-11.onrender.com/api/v1/stall/update"
 HEARTBEAT_URL = "https://smart-desk-backend-11.onrender.com/api/v1/stall/heartbeat"
 
 # LBPH confidence is a distance score — LOWER means a better match.
-# Tune this against your own camera/lighting: if the SAME person gets
-# counted twice, raise it; if TWO different people only count as one,
-# lower it.
+# Start here, but WATCH THE TERMINAL: every detected face now prints its
+# actual confidence number. If the same person's number is consistently
+# above this threshold (so they keep getting re-counted), RAISE it to just
+# above what you're seeing. If two different people's numbers are both
+# below it (so they get merged into one), LOWER it.
 MATCH_THRESHOLD = 70
+
+# Safety net: even with a good threshold, one noisy frame could momentarily
+# fail to match someone who was just registered — this stops that single
+# bad frame from re-triggering a "new person" a split-second later.
+MIN_REGISTRATION_GAP_S = 2
 
 FACE_SIZE            = (200, 200)
 HEARTBEAT_INTERVAL_S = 15
@@ -33,19 +40,21 @@ known_faces  = []
 known_labels = []
 trained      = False
 
-count          = 0
-today          = date.today()
-last_sent      = 0
-last_heartbeat = 0
+count             = 0
+today             = date.today()
+last_sent         = 0
+last_heartbeat    = 0
+last_registration = 0
 
 print("✅ Smart People Counter Started (face-based unique counting)")
 
 
-def is_known_face(face):
+def check_face(face):
+    """Returns (is_known, confidence). confidence is None if nothing to compare against yet."""
     if not trained:
-        return False
+        return False, None
     _, confidence = recognizer.predict(face)
-    return confidence <= MATCH_THRESHOLD
+    return confidence <= MATCH_THRESHOLD, confidence
 
 
 def register_face(face):
@@ -70,21 +79,26 @@ while True:
     gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    now = time.time()
 
     for (x, y, w, h) in faces:
         face_img = cv2.resize(gray[y:y + h, x:x + w], FACE_SIZE)
+        is_known, confidence = check_face(face_img)
 
-        if is_known_face(face_img):
-            color = (0, 255, 0)          # green = already counted today
+        if is_known:
+            color = (0, 255, 0)  # green = already counted today
+            print(f"   (matched existing face — confidence {confidence:.1f}, threshold {MATCH_THRESHOLD})")
+        elif now - last_registration < MIN_REGISTRATION_GAP_S:
+            color = (0, 200, 255)  # yellow = skipped, too soon after last registration
         else:
+            conf_str = f"{confidence:.1f}" if confidence is not None else "n/a (first face)"
             register_face(face_img)
+            last_registration = now
             count += 1
-            color = (0, 140, 255)        # orange = just counted as new
-            print(f"✔ New person counted! Total: {count}")
+            color = (0, 140, 255)  # orange = just counted as new
+            print(f"✔ New person counted! Total: {count} (confidence was {conf_str}, threshold {MATCH_THRESHOLD})")
 
         cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
-
-    now = time.time()
 
     # Heartbeat — this is what makes "CAMERA STATUS" show LIVE on the Dashboard.
     if now - last_heartbeat > HEARTBEAT_INTERVAL_S:
