@@ -73,13 +73,13 @@ export default function SchoolAnalytics() {
         ) : (
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={breakdown} margin={{ left: -10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a45" vertical={false} />
-              <XAxis dataKey="class_section" tick={{ fill: "#7a7a9a", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#7a7a9a", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="class_section" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="present" name="Present" fill="#00d4aa" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="absent"  name="Absent"  fill="#ff6b6b" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="present" name="Present" fill="var(--accent2)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="absent"  name="Absent"  fill="var(--danger)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

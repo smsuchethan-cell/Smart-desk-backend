@@ -19,7 +19,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-import { useMode, MODES } from "../ModeContext";
+import { useMode, MODES } from "../context/ModeContext";
 
 const REFRESH_INTERVAL = 10000;
 
@@ -38,14 +38,14 @@ const CustomTooltip = ({ active, payload, label }) => {
     return (
       <div
         style={{
-          background: "#1a1a2e",
-          border: "1px solid #2a2a45",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
           padding: "10px 14px",
         }}
       >
-        <p style={{ color: "#7a7a9a", fontSize: 12 }}>{label}</p>
-        <p style={{ color: "#6c63ff", fontWeight: 700 }}>
+        <p style={{ color: "var(--muted)", fontSize: 12 }}>{label}</p>
+        <p style={{ color: "var(--accent)", fontWeight: 700 }}>
           {payload[0].value}
         </p>
       </div>
@@ -211,24 +211,9 @@ export default function Dashboard() {
 
       {/* Stall Counter */}
 
-      <div style={{ margin: "20px 0 8px" }}>
-        <h3
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "var(--muted)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          📷 Live Stall Counter
-        </h3>
-      </div>
+      <h3 className="section-label">📷 Live Stall Counter</h3>
 
-      <div
-        className="stat-grid"
-        style={{ marginBottom: 24 }}
-      >
+      <div className="stat-grid" style={{ marginBottom: 24 }}>
         <StatCard
           label="Today's Visitors"
           value={stallCount?.today_count ?? 0}
@@ -257,13 +242,7 @@ export default function Dashboard() {
 
           <div
             className="stat-value"
-            style={{
-              fontSize: 18,
-              color:
-                (stallCount?.today_count ?? 0) > 0
-                  ? "#00d4aa"
-                  : "#7a7a9a",
-            }}
+            style={{ fontSize: 18, color: (stallCount?.today_count ?? 0) > 0 ? "var(--accent2)" : "var(--muted)" }}
           >
             {(stallCount?.today_count ?? 0) > 0
               ? "🟢 LIVE"
@@ -275,20 +254,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-            {/* ── Attendance Analytics Cards ── */}
-      <div style={{ margin: "20px 0 8px" }}>
-        <h3
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "var(--muted)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          📅 Attendance Analytics
-        </h3>
-      </div>
+
+      <h3 className="section-label">📅 Attendance Analytics</h3>
 
       <div className="stat-grid" style={{ marginBottom: 24 }}>
         <StatCard
@@ -321,19 +288,7 @@ export default function Dashboard() {
 
       {/* ───────────── NEW GPS SECTION ───────────── */}
 
-      <div style={{ margin: "20px 0 8px" }}>
-        <h3
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "var(--muted)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          📍 Stall Live Location
-        </h3>
-      </div>
+      <h3 className="section-label">📍 Stall Live Location</h3>
 
       <div className="card" style={{ marginBottom: 24 }}>
         {gps?.latitude && gps?.longitude ? (
@@ -375,7 +330,7 @@ export default function Dashboard() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  background: "#6c63ff",
+                  background: "var(--accent)",
                   color: "#fff",
                   padding: "8px 18px",
                   borderRadius: 8,
@@ -405,19 +360,7 @@ export default function Dashboard() {
 
       {/* ── Peak Hours ── */}
 
-      <div style={{ margin: "20px 0 8px" }}>
-        <h3
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "var(--muted)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          🔥 Live Visitor Heatmap — Today's Peak Hours
-        </h3>
-      </div>
+      <h3 className="section-label">🔥 Live Visitor Heatmap — Today's Peak Hours</h3>
 
       <div className="card" style={{ marginBottom: 24 }}>
         {hourly.every((h) => h.checkins === 0) ? (
@@ -427,11 +370,11 @@ export default function Dashboard() {
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={hourly} margin={{ left: -10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a45" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: "#7a7a9a", fontSize: 10 }} axisLine={false} tickLine={false} interval={1} />
-              <YAxis tick={{ fill: "#7a7a9a", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: "var(--muted)", fontSize: 10 }} axisLine={false} tickLine={false} interval={1} />
+              <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="checkins" fill="#ff6b6b" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="checkins" fill="var(--danger)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -472,19 +415,19 @@ export default function Dashboard() {
               <BarChart data={scans} margin={{ left: -10 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#2a2a45"
+                  stroke="var(--border)"
                   vertical={false}
                 />
 
                 <XAxis
                   dataKey="name"
-                  tick={{ fill: "#7a7a9a", fontSize: 11 }}
+                  tick={{ fill: "var(--muted)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
 
                 <YAxis
-                  tick={{ fill: "#7a7a9a", fontSize: 11 }}
+                  tick={{ fill: "var(--muted)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -493,7 +436,7 @@ export default function Dashboard() {
 
                 <Bar
                   dataKey="scans"
-                  fill="#6c63ff"
+                  fill="var(--accent)"
                   radius={[6, 6, 0, 0]}
                 />
               </BarChart>
@@ -527,19 +470,19 @@ export default function Dashboard() {
               <BarChart data={attend} margin={{ left: -10 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#2a2a45"
+                  stroke="var(--border)"
                   vertical={false}
                 />
 
                 <XAxis
                   dataKey="name"
-                  tick={{ fill: "#7a7a9a", fontSize: 11 }}
+                  tick={{ fill: "var(--muted)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
 
                 <YAxis
-                  tick={{ fill: "#7a7a9a", fontSize: 11 }}
+                  tick={{ fill: "var(--muted)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -548,7 +491,7 @@ export default function Dashboard() {
 
                 <Bar
                   dataKey="checked_in"
-                  fill="#00d4aa"
+                  fill="var(--accent2)"
                   radius={[6, 6, 0, 0]}
                 />
               </BarChart>

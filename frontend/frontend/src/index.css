@@ -31,6 +31,16 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── Theme transition ──────────────────────────────────────────
+   Mode switches change CSS variables at runtime (see ModeContext) —
+   this makes the handoff feel like a fade rather than a hard cut. */
+body, .sidebar, .card, .stat-card, .nav-link, .btn, .badge, .modal,
+.form-input, .form-select, .form-textarea, .product-card, th, td,
+.topbar, .search-input, .scan-input, .result-panel {
+  transition: background-color 300ms ease, border-color 300ms ease,
+              color 300ms ease, box-shadow 300ms ease;
+}
+
 /* ── Scrollbar ──────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--surface); }
@@ -102,10 +112,15 @@ html, body, #root {
 }
 
 /* ── Cards ─────────────────────────────────────────────────── */
+/* --card-accent-left/top/glow are set per-mode in src/themes/*.js;
+   unset ones simply have no effect (each mode only uses the one it needs). */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-left: var(--card-accent-left, 1px solid var(--border));
+  border-top: var(--card-accent-top, 1px solid var(--border));
   border-radius: var(--radius-lg);
+  box-shadow: var(--card-accent-glow, none);
   padding: 24px;
 }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
@@ -271,6 +286,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 /* ── Animations ─────────────────────────────────────────────── */
 @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes confetti-fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 .fade-in { animation: fadeIn 0.3s ease; }
 .slide-up { animation: slideUp 0.3s ease; }
 
@@ -288,6 +304,16 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; gap: 16px; }
 .page-header h2 { font-size: 24px; font-weight: 800; }
 
+/* ── Section label (small uppercase heading above a group of cards) ── */
+.section-label {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* ── Search ──────────────────────────────────────────────────── */
 .search-input {
   background: var(--surface2); border: 1px solid var(--border);
@@ -296,6 +322,81 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   width: 280px; transition: border-color 0.2s;
 }
 .search-input:focus { outline: none; border-color: var(--accent); }
+
+/* ── Mode Landing (shown before a mode is chosen) ──────────────
+   Deliberately independent of the theme variables above — this
+   screen is seen before any mode/theme is picked. */
+.mode-landing {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #0f0f1e 0%, #1a1a2e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+.mode-landing-title {
+  font-size: 34px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+.mode-landing-subtitle {
+  font-size: 15px;
+  color: #9a9ab8;
+  margin-bottom: 48px;
+  text-align: center;
+}
+.mode-landing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+  width: 100%;
+}
+.mode-card {
+  background: #16162a;
+  border: 1px solid #2a2a45;
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  animation: slideUp 0.4s ease backwards;
+}
+.mode-card:nth-child(1) { animation-delay: 0.05s; }
+.mode-card:nth-child(2) { animation-delay: 0.12s; }
+.mode-card:nth-child(3) { animation-delay: 0.19s; }
+.mode-card:nth-child(4) { animation-delay: 0.26s; }
+.mode-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--mode-card-color, #6c63ff);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+}
+.mode-card-icon { font-size: 40px; }
+.mode-card-name { font-size: 20px; font-weight: 800; color: #fff; }
+.mode-card-tagline { font-size: 13px; color: var(--mode-card-color, #6c63ff); font-weight: 600; margin-top: -8px; }
+.mode-card-desc { font-size: 13px; color: #9a9ab8; line-height: 1.5; }
+.mode-card-features { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.mode-card-features li { font-size: 12.5px; color: #c4c4dd; display: flex; align-items: center; gap: 8px; }
+.mode-card-features li::before { content: '✓'; color: var(--mode-card-color, #6c63ff); font-weight: 800; }
+.mode-card-select {
+  margin-top: auto;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--mode-card-color, #6c63ff);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.mode-card-select:hover { filter: brightness(1.1); }
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 768px) {

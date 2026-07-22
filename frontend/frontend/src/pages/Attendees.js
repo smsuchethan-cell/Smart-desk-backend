@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getAttendees, getEvents, checkinAttendee } from "../api";
+import { useMode } from "../context/ModeContext";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -191,7 +192,13 @@ function CheckInModal({ attendee, onClose }) {
 }
 
 // ── Main Page ───────────────────────────────────────────────────────────────
+const TITLE_BY_MODE = {
+  Corporate: { icon: "🧑‍💼", label: "Visitors" },
+};
+
 export default function Attendees() {
+  const { mode } = useMode();
+  const title = TITLE_BY_MODE[mode] || { icon: "👥", label: "Attendees" };
   const [attendees,   setAttendees]  = useState([]);
   const [events,      setEvents]     = useState([]);
   const [loading,     setLoading]    = useState(true);
@@ -220,7 +227,7 @@ export default function Attendees() {
   return (
     <div className="page fade-in">
       <div className="page-header">
-        <h2>👥 Attendees</h2>
+        <h2>{title.icon} {title.label}</h2>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <select className="form-select" style={{ width: 200 }} value={filterEvent} onChange={e => setFilter(e.target.value)}>
             <option value="">All Events</option>
