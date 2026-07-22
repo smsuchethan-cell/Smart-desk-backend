@@ -1,12 +1,18 @@
 from picamera2 import Picamera2
 import cv2
 import numpy as np
+import os
 import time
 import requests
 from datetime import date
 
 API_URL       = "https://smart-desk-backend-11.onrender.com/api/v1/stall/update"
 HEARTBEAT_URL = "https://smart-desk-backend-11.onrender.com/api/v1/stall/heartbeat"
+
+# Set SHOW_PREVIEW=0 in the environment (as the systemd service does) to run
+# headless with no display — needed since a systemd service has no monitor
+# attached. Defaults to on for interactive/manual runs.
+SHOW_PREVIEW = os.environ.get("SHOW_PREVIEW", "1") != "0"
 
 # LBPH confidence is a distance score — LOWER means a better match.
 # Start here, but WATCH THE TERMINAL: every detected face now prints its
@@ -153,11 +159,13 @@ while True:
         except Exception as e:
             print(f"⚠ API error: {e}")
 
-    cv2.putText(frame, f"Count: {count}", (20, 40),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    cv2.imshow("Smart Counter", frame)
+    if SHOW_PREVIEW:
+        cv2.putText(frame, f"Count: {count}", (20, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.imshow("Smart Counter", frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-cv2.destroyAllWindows()
+if SHOW_PREVIEW:
+    cv2.destroyAllWindows()

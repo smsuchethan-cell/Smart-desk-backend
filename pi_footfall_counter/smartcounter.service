@@ -1,0 +1,16 @@
+[Unit]
+Description=Smart Desk Footfall Counter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=siritechnocrats
+WorkingDirectory=/home/siritechnocrats/smartdesk
+Environment=SHOW_PREVIEW=0
+ExecStart=/home/siritechnocrats/smartdesk/smartenv/bin/python /home/siritechnocrats/smartdesk/people_counter.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
