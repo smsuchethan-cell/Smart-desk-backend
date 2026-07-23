@@ -62,6 +62,12 @@ Base.metadata.create_all(bind=engine)
 # Each statement is idempotent (safe to run on every startup).
 with engine.begin() as conn:
     conn.execute(text("ALTER TABLE attendees ADD COLUMN IF NOT EXISTS phone VARCHAR(50)"))
+    conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS device VARCHAR(50)"))
+    conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS browser VARCHAR(50)"))
+    conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS city VARCHAR(100)"))
+    conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS region VARCHAR(100)"))
+    conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS country VARCHAR(100)"))
+    conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS time_spent_seconds INTEGER"))
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(product_routes.router,   prefix="/api/v1", tags=["Products"])

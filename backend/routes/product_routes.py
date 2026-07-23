@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, BackgroundTasks
 from sqlalchemy.orm import Session
-from database.db import get_db
+from pydantic import BaseModel
+from database.db import get_db, SessionLocal
 from models.product import Product
 from models.scan_log import ScanLog
 from models.enquiry import Enquiry
 from schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from utils.qr_generator import generate_qr
+from utils.user_agent import parse_user_agent
+from utils.geolocation import get_ip_location
 from typing import List
 import os
 
@@ -60,21 +63,78 @@ def list_products(db: Session = Depends(get_db)):
     return db.query(Product).order_by(Product.created_at.desc()).all()
 
 
+def _fill_in_scan_location(scan_log_id: int, ip: str):
+    """Runs after the response has already gone out — looks up the visitor's
+    approximate city from their IP and updates the scan log. Uses its own DB
+    session since the request's session is closed by the time this runs."""
+    location = get_ip_location(ip)
+    if not any(location.values()):
+        return
+    db = SessionLocal()
+    try:
+        log = db.query(ScanLog).filter(ScanLog.id == scan_log_id).first()
+        if log:
+            log.city = location["city"]
+            log.region = location["region"]
+            log.country = location["country"]
+            db.commit()
+    finally:
+        db.close()
+
+
 @router.get("/products/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, request: Request, db: Session = Depends(get_db)):
+def get_product(
+    product_id: int,
+    request: Request,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Log scan
+    # Passively captured — no form, no permission prompt. Device/browser come
+    # from the User-Agent header (always sent); city/region/country are
+    # filled in afterward via a background IP lookup so it doesn't add
+    # latency to the visitor's page load.
+    ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "")
+    device, browser = parse_user_agent(user_agent)
+
     log = ScanLog(
         product_id=product_id,
-        ip_address=request.client.host if request.client else "unknown"
+        ip_address=ip,
+        device=device,
+        browser=browser,
     )
     db.add(log)
     db.commit()
+    db.refresh(log)
+
+    background_tasks.add_task(_fill_in_scan_location, log.id, ip)
+
+    # Exposed so the frontend can attach a time-spent-on-page beacon to this
+    # exact scan later (see /scan-logs/{id}/duration below).
+    response.headers["X-Scan-Log-Id"] = str(log.id)
 
     return product
+
+
+class ScanDurationPayload(BaseModel):
+    seconds: int
+
+
+@router.post("/scan-logs/{scan_log_id}/duration")
+def record_scan_duration(scan_log_id: int, payload: ScanDurationPayload, db: Session = Depends(get_db)):
+    """Called via navigator.sendBeacon when the visitor leaves the product
+    page, so 'time spent' can be tracked without any prompt or form."""
+    log = db.query(ScanLog).filter(ScanLog.id == scan_log_id).first()
+    if not log:
+        raise HTTPException(404, "Scan log not found")
+    log.time_spent_seconds = payload.seconds
+    db.commit()
+    return {"status": "ok"}
 
 
 @router.put("/products/{product_id}", response_model=ProductResponse)

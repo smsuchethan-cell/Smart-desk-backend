@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { getStallCount, getHourlyTraffic, getScanStats, getSummary, getEnquiries, getRevenuePotential } from "../api";
+import { getStallCount, getHourlyTraffic, getScanStats, getSummary, getEnquiries, getRevenuePotential, getRecentScans } from "../api";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
@@ -13,18 +13,20 @@ export default function RetailDashboard() {
   const [summary, setSummary] = useState(null);
   const [leadCount, setLeadCount] = useState(0);
   const [revenue, setRevenue] = useState(null);
+  const [recentScans, setRecentScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
 
   const fetchAll = useCallback(() => {
-    Promise.allSettled([getStallCount(), getHourlyTraffic(), getScanStats(), getSummary(), getEnquiries(), getRevenuePotential()])
-      .then(([s, h, sc, sum, leads, rev]) => {
+    Promise.allSettled([getStallCount(), getHourlyTraffic(), getScanStats(), getSummary(), getEnquiries(), getRevenuePotential(), getRecentScans()])
+      .then(([s, h, sc, sum, leads, rev, recent]) => {
         if (s.status === "fulfilled") setStall(s.value.data);
         if (h.status === "fulfilled") setHourly(h.value.data.map(r => ({ name: `${r.hour}:00`, visitors: r.checkins })));
         if (sc.status === "fulfilled") setScans(sc.value.data.sort((a, b) => b.total_scans - a.total_scans).slice(0, 5));
         if (sum.status === "fulfilled") setSummary(sum.value.data);
         if (leads.status === "fulfilled") setLeadCount(leads.value.data.length);
         if (rev.status === "fulfilled") setRevenue(rev.value.data);
+        if (recent.status === "fulfilled") setRecentScans(recent.value.data);
         setLastRefresh(new Date().toLocaleTimeString());
       })
       .finally(() => setLoading(false));
@@ -39,6 +41,14 @@ export default function RetailDashboard() {
   if (loading) return <div className="loading-center"><div className="spinner" /></div>;
 
   const peakHour = hourly.reduce((max, r) => r.visitors > (max?.visitors || 0) ? r : max, null);
+
+  const formatDuration = (seconds) => {
+    if (seconds === null || seconds === undefined) return "—";
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  };
+  const formatLocation = (s) => [s.city, s.region, s.country].filter(Boolean).join(", ") || "—";
 
   return (
     <div className="page fade-in">
@@ -83,6 +93,31 @@ export default function RetailDashboard() {
             if every recorded scan became a sale (price × scan count, summed across all products)
           </div>
         </div>
+      </div>
+
+      <h3 className="section-label">📡 Live Scan Activity</h3>
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        {recentScans.length === 0 ? (
+          <p style={{ color: "var(--muted)", textAlign: "center", padding: "16px 0" }}>No scans recorded yet</p>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>Product</th><th>Device</th><th>Location</th><th>Time Spent</th></tr></thead>
+              <tbody>
+                {recentScans.map(s => (
+                  <tr key={s.id}>
+                    <td>{new Date(s.scanned_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</td>
+                    <td style={{ fontWeight: 600 }}>{s.product_name}</td>
+                    <td>{[s.device, s.browser].filter(Boolean).join(", ") || "—"}</td>
+                    <td>{formatLocation(s)}</td>
+                    <td>{formatDuration(s.time_spent_seconds)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <h3 className="section-label">🏆 Top Scanned Products</h3>

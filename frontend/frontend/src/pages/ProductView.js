@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProduct, submitEnquiry } from "../api";
 import toast from "react-hot-toast";
@@ -22,12 +22,50 @@ export default function ProductView() {
   const [leadSending, setLeadSending] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
 
+  const [scanLogId, setScanLogId] = useState(null);
+  const openedAtRef = useRef(Date.now());
+  const durationSentRef = useRef(false);
+
   useEffect(() => {
     getProduct(id)
-      .then(r => setProduct(r.data))
+      .then(r => {
+        setProduct(r.data);
+        const logId = r.headers["x-scan-log-id"];
+        if (logId) setScanLogId(logId);
+        openedAtRef.current = Date.now();
+      })
       .catch(() => toast.error("Product not found"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Passive "time spent on page" tracking — sent via sendBeacon so it fires
+  // reliably on tab close/navigation without blocking the UI. Reports on the
+  // first exit signal (tab hidden, unload, or React unmount for in-app nav);
+  // does not resume counting if the visitor comes back to the tab.
+  useEffect(() => {
+    if (!scanLogId) return;
+
+    const sendDuration = () => {
+      if (durationSentRef.current) return;
+      durationSentRef.current = true;
+      const seconds = Math.round((Date.now() - openedAtRef.current) / 1000);
+      const blob = new Blob([JSON.stringify({ seconds })], { type: "application/json" });
+      navigator.sendBeacon(`${BASE}/api/v1/scan-logs/${scanLogId}/duration`, blob);
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") sendDuration();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pagehide", sendDuration);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pagehide", sendDuration);
+      sendDuration();
+    };
+  }, [scanLogId]);
 
   useEffect(() => {
     if (!product || leadDismissed) return;

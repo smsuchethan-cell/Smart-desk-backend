@@ -12,6 +12,34 @@ from datetime import date
 router = APIRouter()
 
 
+@router.get("/analytics/recent-scans")
+def recent_scans(limit: int = 15, db: Session = Depends(get_db)):
+    """Live scan activity feed for the admin dashboard — device, browser,
+    approximate city, and time spent, all captured passively (no form)."""
+    results = (
+        db.query(ScanLog, Product)
+        .join(Product, Product.id == ScanLog.product_id)
+        .order_by(ScanLog.scanned_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id":           log.id,
+            "product_id":   p.id,
+            "product_name": p.name,
+            "scanned_at":   log.scanned_at,
+            "device":       log.device,
+            "browser":      log.browser,
+            "city":         log.city,
+            "region":       log.region,
+            "country":      log.country,
+            "time_spent_seconds": log.time_spent_seconds,
+        }
+        for log, p in results
+    ]
+
+
 @router.get("/analytics/scans")
 def scan_analytics(db: Session = Depends(get_db)):
     results = (
