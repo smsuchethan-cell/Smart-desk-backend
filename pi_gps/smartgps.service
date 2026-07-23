@@ -1,0 +1,15 @@
+[Unit]
+Description=Smart Desk GPS Reporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=siritechnocrats
+WorkingDirectory=/home/siritechnocrats/smartdesk
+ExecStart=/home/siritechnocrats/smartdesk/smartenv/bin/python /home/siritechnocrats/smartdesk/gps_reporter.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
