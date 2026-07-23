@@ -6,7 +6,7 @@ from models.product import Product
 from models.scan_log import ScanLog
 from models.enquiry import Enquiry
 from schemas.product import ProductCreate, ProductUpdate, ProductResponse
-from utils.qr_generator import generate_qr
+from utils.qr_generator import generate_qr, generate_qr_bytes
 from utils.user_agent import parse_user_agent
 from utils.geolocation import get_ip_location
 from typing import List
@@ -61,6 +61,19 @@ def regenerate_qr(product_id: int, db: Session = Depends(get_db)):
 @router.get("/products", response_model=List[ProductResponse])
 def list_products(db: Session = Depends(get_db)):
     return db.query(Product).order_by(Product.created_at.desc()).all()
+
+
+@router.get("/products/{product_id}/qr.png")
+def get_product_qr(product_id: int, db: Session = Depends(get_db)):
+    """Generated fresh on every request — no disk write, so it survives
+    Render's ephemeral filesystem (unlike the cached file at qr_code_path,
+    which vanishes on every restart)."""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    png_bytes = generate_qr_bytes(f"{FRONTEND_URL}/products/{product.id}")
+    return Response(content=png_bytes, media_type="image/png")
 
 
 def _fill_in_scan_location(scan_log_id: int, ip: str):

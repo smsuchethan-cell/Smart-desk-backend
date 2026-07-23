@@ -117,9 +117,7 @@ export default function Products() {
                     <div className="product-name">{p.name}</div>
                     <div className="product-price">{p.price ? `₹${p.price.toLocaleString()}` : "Price N/A"}</div>
                     <div className="product-desc">{p.description || "No description"}</div>
-                    {p.qr_code_path && (
-                      <img className="product-qr" src={`${BASE}/${p.qr_code_path}`} alt="QR" />
-                    )}
+                    <img className="product-qr" src={`${BASE}/api/v1/products/${p.id}/qr.png`} alt="QR" />
                     <div style={{ display: "flex", gap: 8, marginTop: "auto", paddingTop: 12 }}>
                       <Link to={`/products/${p.id}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: "center" }}>👁 View</Link>
                       <button className="btn btn-ghost btn-sm" onClick={() => setModal(p)}>✏️</button>

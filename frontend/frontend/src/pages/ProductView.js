@@ -134,16 +134,14 @@ export default function ProductView() {
             ? <img src={product.image_url} alt={product.name} style={{ width: "100%", borderRadius: 16, maxHeight: 340, objectFit: "cover", border: "1px solid var(--border)" }} />
             : <div style={{ height: 280, background: "var(--surface2)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72, border: "1px solid var(--border)" }}>📦</div>
           }
-          {product.qr_code_path && (
-            <div className="card" style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <img src={`${BASE}/${product.qr_code_path}`} alt="QR" style={{ width: 90, height: 90, borderRadius: 8 }} />
-              <div>
-                <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4 }}>Product QR Code</div>
-                <div style={{ fontSize: 12, color: "var(--accent)", fontFamily: "monospace" }}>PRODUCT:{product.id}</div>
-                <a href={`${BASE}/${product.qr_code_path}`} download className="btn btn-ghost btn-sm" style={{ marginTop: 8 }}>⬇ Download</a>
-              </div>
+          <div className="card" style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <img src={`${BASE}/api/v1/products/${product.id}/qr.png`} alt="QR" style={{ width: 90, height: 90, borderRadius: 8 }} />
+            <div>
+              <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4 }}>Product QR Code</div>
+              <div style={{ fontSize: 12, color: "var(--accent)", fontFamily: "monospace" }}>PRODUCT:{product.id}</div>
+              <a href={`${BASE}/api/v1/products/${product.id}/qr.png`} download className="btn btn-ghost btn-sm" style={{ marginTop: 8 }}>⬇ Download</a>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Right — details */}
