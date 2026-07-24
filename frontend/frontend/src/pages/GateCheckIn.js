@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -13,6 +13,9 @@ export default function GateCheckIn() {
   const [code, setCode] = useState("");
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState(null); // { success, message, name, already_checked_in, print_url }
+
+  const printFrameRef = useRef(null);
+  const printedRef = useRef(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -33,7 +36,44 @@ export default function GateCheckIn() {
   const reset = () => {
     setCode("");
     setResult(null);
+    printedRef.current = false;
   };
+
+  // Auto-pop the browser's print dialog the instant a fresh check-in
+  // succeeds, so whoever's at the printer doesn't have to find a button.
+  // Fetched as a blob first because the badge PDF lives on a different
+  // origin (the API) — a cross-origin iframe can't be scripted to print,
+  // but a blob: URL built from the fetched bytes is same-origin and can.
+  // Browsers still require this one click on the print dialog itself;
+  // there's no way to skip that without a kiosk-mode browser config.
+  useEffect(() => {
+    if (!result || result.already_checked_in || !result.print_url || printedRef.current) return;
+    printedRef.current = true;
+
+    let blobUrl;
+    (async () => {
+      try {
+        const res = await axios.get(`${BASE}${result.print_url}`, { responseType: "blob" });
+        blobUrl = URL.createObjectURL(res.data);
+        const frame = printFrameRef.current;
+        if (!frame) return;
+        frame.onload = () => {
+          try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+          } catch {
+            // Some browsers block scripted printing of an embedded PDF —
+            // the "View / Print Badge" button below still works either way.
+          }
+        };
+        frame.src = blobUrl;
+      } catch {
+        // Auto-print failed silently — the manual button is the fallback.
+      }
+    })();
+
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl); };
+  }, [result]);
 
   return (
     <div className="page fade-in" style={{ maxWidth: 420, margin: "0 auto" }}>
@@ -84,6 +124,9 @@ export default function GateCheckIn() {
           </>
         )}
       </div>
+
+      {/* Invisible — only exists to drive the browser's print dialog */}
+      <iframe ref={printFrameRef} title="badge-print" style={{ position: "fixed", right: 0, bottom: 0, width: 0, height: 0, border: 0 }} />
     </div>
   );
 }
