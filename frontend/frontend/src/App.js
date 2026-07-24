@@ -16,6 +16,7 @@ import Events          from "./pages/Events";
 import Attendees       from "./pages/Attendees";
 import AttendeeView    from "./pages/AttendeeView";
 import RegisterAttendee from "./pages/RegisterAttendee";
+import GateCheckIn     from "./pages/GateCheckIn";
 import Enquiries       from "./pages/Enquiries";
 import Students        from "./pages/Students";
 import SchoolAnalytics from "./pages/SchoolAnalytics";
@@ -205,6 +206,7 @@ export default function App() {
           <Route path="/products/:id"   element={<ProductView />} />
           <Route path="/attendee/:qrId" element={<AttendeeView />} />
           <Route path="/register/:eventId" element={<RegisterAttendee />} />
+          <Route path="/gate" element={<GateCheckIn />} />
           {/* Everything else is the staff-facing admin app. */}
           <Route path="/*" element={<AdminShell />} />
         </Routes>

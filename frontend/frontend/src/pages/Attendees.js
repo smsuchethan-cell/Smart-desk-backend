@@ -240,6 +240,11 @@ export default function Attendees() {
   const regLink = filterEvent ? `${FRONTEND_URL}/register/${filterEvent}` : null;
   const regQr   = filterEvent ? `${BASE}/api/v1/events/${filterEvent}/register-qr.png` : null;
 
+  // Gate self check-in QR — fixed, not tied to any one event (a code lookup
+  // works across all events), so it's always available regardless of filter.
+  const gateLink = `${FRONTEND_URL}/gate`;
+  const gateQr   = `${BASE}/api/v1/gate/qr.png`;
+
   return (
     <div className="page fade-in">
       <div className="page-header">
@@ -293,6 +298,22 @@ export default function Attendees() {
         ) : (
           <span style={{ fontSize: 13, color: "var(--muted)" }}>📨 Select an event above to get its registration QR code for the desk.</span>
         )}
+      </div>
+
+      {/* Gate self check-in QR — fixed, always available */}
+      <div style={{ background: "var(--bg2)", border: "1px solid var(--border)",
+                    borderRadius: 8, padding: "10px 16px", marginBottom: 20,
+                    display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <img src={gateQr} alt="Gate Check-In QR" style={{ width: 56, height: 56, borderRadius: 6 }} />
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <span style={{ fontSize: 13, color: "var(--muted)", display: "block" }}>🚪 Scan to check in at the gate — print this for the entrance:</span>
+          <code style={{ fontSize: 12, color: "var(--accent2)" }}>{gateLink}</code>
+        </div>
+        <a className="btn btn-ghost btn-sm" href={gateQr} download>⬇ Download QR</a>
+        <button className="btn btn-ghost btn-sm" onClick={() => {
+          navigator.clipboard.writeText(gateLink);
+          toast.success("Copied!");
+        }}>Copy Link</button>
       </div>
 
       {loading

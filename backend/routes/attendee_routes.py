@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, Response
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from database.db import get_db
@@ -6,7 +6,7 @@ from models.attendee import Attendee
 from models.attendance import Attendance
 from models.event import Event
 from schemas.attendee import AttendeeResponse, CheckInResponse
-from utils.qr_generator import generate_qr
+from utils.qr_generator import generate_qr, generate_qr_bytes
 from utils.badge_generator import generate_badge
 from utils.mailer import send_registration_email
 from utils.whatsapp import send_registration_whatsapp
@@ -310,3 +310,14 @@ def print_badge(attendee_id: int, db: Session = Depends(get_db)):
         media_type = "application/pdf",
         headers    = {"Content-Disposition": "inline"},
     )
+
+
+# ── Gate self check-in QR ──────────────────────────────────────────────────────
+@router.get("/gate/qr.png")
+def get_gate_qr():
+    """QR code for a printed sign at the gate — scanning it opens the
+    self check-in page where a visitor types their own entry code. Not
+    tied to any one event (a code lookup works across all events), so
+    this is a single fixed QR, generated fresh on every request."""
+    png_bytes = generate_qr_bytes(f"{FRONTEND_URL}/gate")
+    return Response(content=png_bytes, media_type="image/png")
