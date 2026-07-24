@@ -1,13 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from database.db import get_db
 from models.event import Event
 from models.attendee import Attendee
 from models.attendance import Attendance
 from schemas.event import EventCreate, EventUpdate, EventResponse
+from utils.qr_generator import generate_qr_bytes
 from typing import List
+import os
 
 router = APIRouter()
+
+# Public frontend origin — the desk registration QR links here so a visitor's
+# own phone opens the self-registration form directly.
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://smart-desk-backend-1.onrender.com").rstrip("/")
 
 
 @router.post("/events", response_model=EventResponse)
@@ -30,6 +36,19 @@ def get_event(event_id: int, db: Session = Depends(get_db)):
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return event
+
+
+@router.get("/events/{event_id}/register-qr.png")
+def get_event_register_qr(event_id: int, db: Session = Depends(get_db)):
+    """QR code for the desk to print — scanning it opens the public
+    self-registration page for this event. Generated fresh on every
+    request (no disk write), so it survives server restarts."""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    png_bytes = generate_qr_bytes(f"{FRONTEND_URL}/register/{event_id}")
+    return Response(content=png_bytes, media_type="image/png")
 
 
 @router.put("/events/{event_id}", response_model=EventResponse)

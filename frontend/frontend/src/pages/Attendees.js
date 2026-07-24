@@ -5,6 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const BASE = "https://smart-desk-backend-11.onrender.com";
+const FRONTEND_URL = "https://smart-desk-backend-1.onrender.com";
 const EMPTY = { name: "", company: "", email: "", phone: "", designation: "", event_id: "" };
 
 // ── Register Modal ─────────────────────────────────────────────────────────
@@ -233,8 +234,11 @@ export default function Attendees() {
     a.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Registration link to share before event
-  const regLink = `${BASE}/register`;
+  // Registration is per-event — the QR/link only makes sense once a specific
+  // event is chosen in the filter above (there's no single "register" page
+  // that isn't tied to an event).
+  const regLink = filterEvent ? `${FRONTEND_URL}/register/${filterEvent}` : null;
+  const regQr   = filterEvent ? `${BASE}/api/v1/events/${filterEvent}/register-qr.png` : null;
 
   return (
     <div className="page fade-in">
@@ -248,13 +252,15 @@ export default function Attendees() {
           <input className="search-input" placeholder="Search name / email…"
             value={search} onChange={e => setSearch(e.target.value)} />
 
-          {/* Copy registration link button */}
-          <button className="btn btn-ghost btn-sm" onClick={() => {
-            navigator.clipboard.writeText(regLink);
-            toast.success("Registration link copied!");
-          }}>
-            🔗 Copy Reg Link
-          </button>
+          {/* Copy registration link button — only meaningful once an event is picked */}
+          {regLink && (
+            <button className="btn btn-ghost btn-sm" onClick={() => {
+              navigator.clipboard.writeText(regLink);
+              toast.success("Registration link copied!");
+            }}>
+              🔗 Copy Reg Link
+            </button>
+          )}
 
           <a
             className="btn btn-ghost btn-sm"
@@ -267,16 +273,26 @@ export default function Attendees() {
         </div>
       </div>
 
-      {/* Registration link banner */}
+      {/* Registration QR / link — event-scoped, so pick an event above first */}
       <div style={{ background: "var(--bg2)", border: "1px solid var(--border)",
                     borderRadius: 8, padding: "10px 16px", marginBottom: 20,
                     display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 13, color: "var(--muted)" }}>📨 Pre-event registration link:</span>
-        <code style={{ fontSize: 12, color: "var(--accent2)", flex: 1 }}>{regLink}</code>
-        <button className="btn btn-ghost btn-sm" onClick={() => {
-          navigator.clipboard.writeText(regLink);
-          toast.success("Copied!");
-        }}>Copy</button>
+        {regLink ? (
+          <>
+            <img src={regQr} alt="Registration QR" style={{ width: 56, height: 56, borderRadius: 6 }} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <span style={{ fontSize: 13, color: "var(--muted)", display: "block" }}>📨 Scan to self-register — print this for the desk:</span>
+              <code style={{ fontSize: 12, color: "var(--accent2)" }}>{regLink}</code>
+            </div>
+            <a className="btn btn-ghost btn-sm" href={regQr} download>⬇ Download QR</a>
+            <button className="btn btn-ghost btn-sm" onClick={() => {
+              navigator.clipboard.writeText(regLink);
+              toast.success("Copied!");
+            }}>Copy Link</button>
+          </>
+        ) : (
+          <span style={{ fontSize: 13, color: "var(--muted)" }}>📨 Select an event above to get its registration QR code for the desk.</span>
+        )}
       </div>
 
       {loading

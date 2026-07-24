@@ -15,6 +15,7 @@ import ProductView     from "./pages/ProductView";
 import Events          from "./pages/Events";
 import Attendees       from "./pages/Attendees";
 import AttendeeView    from "./pages/AttendeeView";
+import RegisterAttendee from "./pages/RegisterAttendee";
 import Enquiries       from "./pages/Enquiries";
 import Students        from "./pages/Students";
 import SchoolAnalytics from "./pages/SchoolAnalytics";
@@ -203,6 +204,7 @@ export default function App() {
               no mode ever chosen. Must not sit behind the mode gate. */}
           <Route path="/products/:id"   element={<ProductView />} />
           <Route path="/attendee/:qrId" element={<AttendeeView />} />
+          <Route path="/register/:eventId" element={<RegisterAttendee />} />
           {/* Everything else is the staff-facing admin app. */}
           <Route path="/*" element={<AdminShell />} />
         </Routes>
