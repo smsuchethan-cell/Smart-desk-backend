@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   getSummary,
-  getScanStats,
   getAttendanceStats,
   getAttendanceSummary,
   getStallCount,
@@ -57,7 +56,6 @@ export default function EventDashboard() {
   const [attendance, setAttendance] = useState(null);
   const [stallCount, setStallCount] = useState(null);
   const [gps, setGps] = useState(null);
-  const [scans, setScans] = useState([]);
   const [attend, setAttend] = useState([]);
   const [hourly, setHourly] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,14 +64,13 @@ export default function EventDashboard() {
   const fetchAll = useCallback(() => {
     Promise.allSettled([
       getSummary(),
-      getScanStats(),
       getAttendanceStats(),
       getAttendanceSummary(),
       getStallCount(),
       getGpsLocation(),
       getHourlyTraffic(),
     ])
-      .then(([s, sc, at, attSum, stall, gpsData, hourlyData]) => {
+      .then(([s, at, attSum, stall, gpsData, hourlyData]) => {
         if (s.status === "fulfilled")
           setSummary(s.value.data);
 
@@ -91,16 +88,6 @@ export default function EventDashboard() {
             hourlyData.value.data.map((r) => ({
               name: `${r.hour}:00`,
               checkins: r.checkins,
-            }))
-          );
-
-        if (sc.status === "fulfilled")
-          setScans(
-            sc.value.data.slice(0, 8).map((r) => ({
-              name:
-                r.product_name?.slice(0, 14) +
-                (r.product_name?.length > 14 ? "…" : ""),
-              scans: r.total_scans,
             }))
           );
 
@@ -171,30 +158,16 @@ export default function EventDashboard() {
 
       <div className="stat-grid">
         <StatCard
-          label="Total Products"
-          value={summary?.total_products}
-          icon="📦"
-        />
-
-        <StatCard
-          label="Total Scans"
-          value={summary?.total_scans}
-          icon="📷"
-          color="green"
-        />
-
-        <StatCard
           label="Events"
           value={summary?.total_events}
           icon="🎪"
-          color="yellow"
         />
 
         <StatCard
           label="Checked In"
           value={summary?.total_checked_in}
           icon="✅"
-          color="red"
+          color="green"
         />
       </div>
 
@@ -369,68 +342,7 @@ export default function EventDashboard() {
 
       {/* ── Charts ── */}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 20,
-        }}
-      >
-        <div className="card">
-          <h3
-            style={{
-              marginBottom: 20,
-              fontSize: 16,
-              fontWeight: 700,
-            }}
-          >
-            Product Scans
-          </h3>
-
-          {scans.length === 0 ? (
-            <p
-              style={{
-                color: "var(--muted)",
-                textAlign: "center",
-                padding: "32px 0",
-              }}
-            >
-              No scan data yet
-            </p>
-          ) : (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={scans} margin={{ left: -10 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--border)"
-                  vertical={false}
-                />
-
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: "var(--muted)", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <YAxis
-                  tick={{ fill: "var(--muted)", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip content={<CustomTooltip />} />
-
-                <Bar
-                  dataKey="scans"
-                  fill="var(--accent)"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
+      <div>
         <div className="card">
           <h3
             style={{

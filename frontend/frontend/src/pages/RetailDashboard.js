@@ -59,6 +59,7 @@ export default function RetailDashboard() {
 
       <div className="stat-grid" style={{ marginBottom: 24 }}>
         <div className="stat-card"><div className="stat-label">Total Products</div><div className="stat-value">{summary?.total_products ?? 0}</div><div className="stat-icon">📦</div></div>
+        <div className="stat-card"><div className="stat-label">Total Scans</div><div className="stat-value">{summary?.total_scans ?? 0}</div><div className="stat-icon">📷</div></div>
         <div className="stat-card green"><div className="stat-label">Today's Footfall</div><div className="stat-value">{stall?.today_count ?? 0}</div><div className="stat-icon">👥</div></div>
         <div className="stat-card yellow"><div className="stat-label">Leads Captured</div><div className="stat-value">{leadCount}</div><div className="stat-icon">💬</div></div>
         <div className="stat-card red"><div className="stat-label">Peak Hour</div><div className="stat-value" style={{ fontSize: 22 }}>{peakHour ? peakHour.name : "—"}</div><div className="stat-icon">🕐</div></div>
