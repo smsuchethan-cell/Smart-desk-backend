@@ -5,6 +5,7 @@ from models.student import Student
 from models.school_attendance import SchoolAttendance
 from models.leave import Leave
 from schemas.student import StudentResponse
+from utils.auth import require_auth
 from typing import List
 import uuid, os, shutil
 
@@ -15,7 +16,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 # ── Register a student (with reference photo for face recognition) ───────────
-@router.post("/students", response_model=StudentResponse)
+@router.post("/students", response_model=StudentResponse, dependencies=[Depends(require_auth)])
 async def create_student(
     name:          str        = Form(...),
     roll_number:   str        = Form(...),
@@ -45,7 +46,9 @@ async def create_student(
     return student
 
 
-# ── List (also used by the Pi to sync known faces) ────────────────────────────
+# ── List — deliberately left public: the Pi face-attendance script has no
+# way to hold a staff login token, and fetches this list directly to sync
+# known faces (see pi_face_attendance/face_attendance.py). ────────────────
 @router.get("/students", response_model=List[StudentResponse])
 def list_students(class_section: str = None, db: Session = Depends(get_db)):
     query = db.query(Student)
@@ -54,7 +57,7 @@ def list_students(class_section: str = None, db: Session = Depends(get_db)):
     return query.order_by(Student.name).all()
 
 
-@router.get("/students/{student_id}", response_model=StudentResponse)
+@router.get("/students/{student_id}", response_model=StudentResponse, dependencies=[Depends(require_auth)])
 def get_student(student_id: int, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
@@ -62,7 +65,7 @@ def get_student(student_id: int, db: Session = Depends(get_db)):
     return student
 
 
-@router.delete("/students/{student_id}")
+@router.delete("/students/{student_id}", dependencies=[Depends(require_auth)])
 def delete_student(student_id: int, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:

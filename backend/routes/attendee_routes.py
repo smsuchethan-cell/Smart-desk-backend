@@ -10,6 +10,7 @@ from utils.qr_generator import generate_qr, generate_qr_bytes
 from utils.badge_generator import generate_badge
 from utils.mailer import send_registration_email
 from utils.whatsapp import send_registration_whatsapp
+from utils.auth import require_auth
 from openpyxl import Workbook
 from io import BytesIO
 import uuid, os, shutil
@@ -98,7 +99,7 @@ async def register_attendee(
 
 
 # ── List ──────────────────────────────────────────────────────────────────────
-@router.get("/attendees", response_model=list[AttendeeResponse])
+@router.get("/attendees", response_model=list[AttendeeResponse], dependencies=[Depends(require_auth)])
 def list_attendees(event_id: int = None, db: Session = Depends(get_db)):
     query = db.query(Attendee)
     if event_id:
@@ -131,7 +132,7 @@ def get_attendee_by_qr(qr_id: str, db: Session = Depends(get_db)):
 # ── Export to Excel ─────────────────────────────────────────────────────────
 # Must be declared before /attendees/{attendee_id} — otherwise FastAPI tries
 # to parse "export" as an int attendee_id and 422s instead of matching this route.
-@router.get("/attendees/export")
+@router.get("/attendees/export", dependencies=[Depends(require_auth)])
 def export_attendees(event_id: int = None, db: Session = Depends(get_db)):
     query = db.query(Attendee)
     if event_id:
@@ -174,7 +175,7 @@ def export_attendees(event_id: int = None, db: Session = Depends(get_db)):
 
 
 # ── Get one ───────────────────────────────────────────────────────────────────
-@router.get("/attendees/{attendee_id}", response_model=AttendeeResponse)
+@router.get("/attendees/{attendee_id}", response_model=AttendeeResponse, dependencies=[Depends(require_auth)])
 def get_attendee(attendee_id: int, db: Session = Depends(get_db)):
     a = db.query(Attendee).filter(Attendee.id == attendee_id).first()
     if not a:
@@ -183,7 +184,7 @@ def get_attendee(attendee_id: int, db: Session = Depends(get_db)):
 
 
 # ── Delete ────────────────────────────────────────────────────────────────────
-@router.delete("/attendees/{attendee_id}")
+@router.delete("/attendees/{attendee_id}", dependencies=[Depends(require_auth)])
 def delete_attendee(attendee_id: int, db: Session = Depends(get_db)):
     attendee = db.query(Attendee).filter(Attendee.id == attendee_id).first()
     if not attendee:
@@ -199,7 +200,7 @@ def delete_attendee(attendee_id: int, db: Session = Depends(get_db)):
 
 
 # ── Check-in via QR ───────────────────────────────────────────────────────────
-@router.post("/attendees/checkin/{qr_id}", response_model=CheckInResponse)
+@router.post("/attendees/checkin/{qr_id}", response_model=CheckInResponse, dependencies=[Depends(require_auth)])
 def checkin_attendee(qr_id: str, db: Session = Depends(get_db)):
     attendee = db.query(Attendee).filter(Attendee.qr_id == qr_id).first()
     if not attendee:

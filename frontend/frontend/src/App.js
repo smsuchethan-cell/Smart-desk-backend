@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { getRecentCheckins } from "./api";
 import { ModeProvider, useMode, MODES } from "./context/ModeContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { fireConfetti } from "./utils/confetti";
 import "./index.css";
 
@@ -27,6 +28,7 @@ import Reports         from "./pages/Reports";
 import Employees       from "./pages/Employees";
 import Meetings        from "./pages/Meetings";
 import ModeLanding     from "./pages/ModeLanding";
+import Login           from "./pages/Login";
 
 const CHECKIN_POLL_MS = 8000;
 
@@ -68,10 +70,11 @@ const NAV_BY_MODE = {
 // Polls recent check-ins and toasts any that appear after the first poll
 // (which just establishes a baseline, so old check-ins don't all fire at once).
 // Fires confetti too when in Event mode, since that's the celebratory one.
-function useCheckinNotifications(mode) {
+function useCheckinNotifications(mode, enabled) {
   const lastSeenId = useRef(null);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
 
     const poll = async () => {
@@ -99,7 +102,7 @@ function useCheckinNotifications(mode) {
     poll();
     const timer = setInterval(poll, CHECKIN_POLL_MS);
     return () => { cancelled = true; clearInterval(timer); };
-  }, [mode]);
+  }, [mode, enabled]);
 }
 
 function ModeSelect() {
@@ -162,12 +165,15 @@ function Topbar() {
   );
 }
 
-// The admin/internal experience — gated behind picking a mode, since the
-// sidebar, topbar, and every route here are staff-facing tools.
+// The admin/internal experience — gated behind staff login, then behind
+// picking a mode, since the sidebar, topbar, and every route here are
+// staff-facing tools that talk to protected API endpoints.
 function AdminShell() {
   const { mode } = useMode();
-  useCheckinNotifications(mode);
+  const { isAuthenticated } = useAuth();
+  useCheckinNotifications(mode, isAuthenticated);
 
+  if (!isAuthenticated) return <Login />;
   if (!mode) return <ModeLanding />;
 
   return (
@@ -198,6 +204,7 @@ function AdminShell() {
 
 export default function App() {
   return (
+    <AuthProvider>
     <ModeProvider>
       <BrowserRouter>
         <Routes>
@@ -218,5 +225,6 @@ export default function App() {
         />
       </BrowserRouter>
     </ModeProvider>
+    </AuthProvider>
   );
 }

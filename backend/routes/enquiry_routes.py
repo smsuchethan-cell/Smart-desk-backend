@@ -4,6 +4,7 @@ from database.db import get_db
 from models.enquiry import Enquiry
 from models.product import Product
 from schemas.enquiry import EnquiryCreate, EnquiryResponse
+from utils.auth import require_auth
 from typing import List
 
 router = APIRouter()
@@ -22,12 +23,12 @@ def submit_enquiry(payload: EnquiryCreate, db: Session = Depends(get_db)):
     return enquiry
 
 
-@router.get("/enquiries", response_model=List[EnquiryResponse])
+@router.get("/enquiries", response_model=List[EnquiryResponse], dependencies=[Depends(require_auth)])
 def list_enquiries(db: Session = Depends(get_db)):
     return db.query(Enquiry).order_by(Enquiry.created_at.desc()).all()
 
 
-@router.get("/enquiries/product/{product_id}", response_model=List[EnquiryResponse])
+@router.get("/enquiries/product/{product_id}", response_model=List[EnquiryResponse], dependencies=[Depends(require_auth)])
 def enquiries_by_product(product_id: int, db: Session = Depends(get_db)):
     return (
         db.query(Enquiry)
@@ -37,7 +38,7 @@ def enquiries_by_product(product_id: int, db: Session = Depends(get_db)):
     )
 
 
-@router.delete("/enquiries/{enquiry_id}")
+@router.delete("/enquiries/{enquiry_id}", dependencies=[Depends(require_auth)])
 def delete_enquiry(enquiry_id: int, db: Session = Depends(get_db)):
     enquiry = db.query(Enquiry).filter(Enquiry.id == enquiry_id).first()
     if not enquiry:

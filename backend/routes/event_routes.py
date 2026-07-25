@@ -6,6 +6,7 @@ from models.attendee import Attendee
 from models.attendance import Attendance
 from schemas.event import EventCreate, EventUpdate, EventResponse
 from utils.qr_generator import generate_qr_bytes
+from utils.auth import require_auth
 from typing import List
 import os
 
@@ -16,7 +17,7 @@ router = APIRouter()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://smart-desk-backend-1.onrender.com").rstrip("/")
 
 
-@router.post("/events", response_model=EventResponse)
+@router.post("/events", response_model=EventResponse, dependencies=[Depends(require_auth)])
 def create_event(payload: EventCreate, db: Session = Depends(get_db)):
     event = Event(**payload.model_dump())
     db.add(event)
@@ -25,7 +26,7 @@ def create_event(payload: EventCreate, db: Session = Depends(get_db)):
     return event
 
 
-@router.get("/events", response_model=List[EventResponse])
+@router.get("/events", response_model=List[EventResponse], dependencies=[Depends(require_auth)])
 def list_events(db: Session = Depends(get_db)):
     return db.query(Event).order_by(Event.created_at.desc()).all()
 
@@ -51,7 +52,7 @@ def get_event_register_qr(event_id: int, db: Session = Depends(get_db)):
     return Response(content=png_bytes, media_type="image/png")
 
 
-@router.put("/events/{event_id}", response_model=EventResponse)
+@router.put("/events/{event_id}", response_model=EventResponse, dependencies=[Depends(require_auth)])
 def update_event(event_id: int, payload: EventUpdate, db: Session = Depends(get_db)):
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
@@ -63,7 +64,7 @@ def update_event(event_id: int, payload: EventUpdate, db: Session = Depends(get_
     return event
 
 
-@router.delete("/events/{event_id}")
+@router.delete("/events/{event_id}", dependencies=[Depends(require_auth)])
 def delete_event(event_id: int, db: Session = Depends(get_db)):
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:

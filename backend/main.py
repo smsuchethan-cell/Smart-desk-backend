@@ -22,7 +22,10 @@ from routes import (
     student_routes,
     school_routes,
     corporate_routes,
+    auth_routes,
 )
+from fastapi import Depends
+from utils.auth import require_auth
 
 app = FastAPI(
     title="Smart Digital Desk API",
@@ -73,13 +76,14 @@ with engine.begin() as conn:
 app.include_router(product_routes.router,   prefix="/api/v1", tags=["Products"])
 app.include_router(event_routes.router,     prefix="/api/v1", tags=["Events"])
 app.include_router(attendee_routes.router,  prefix="/api/v1", tags=["Attendees"])
-app.include_router(analytics_routes.router, prefix="/api/v1", tags=["Analytics"])
+app.include_router(analytics_routes.router, prefix="/api/v1", tags=["Analytics"], dependencies=[Depends(require_auth)])
 app.include_router(enquiry_routes.router,   prefix="/api/v1", tags=["Enquiries"])
 app.include_router(qr_routes.router,        prefix="/api/v1", tags=["QR Scanner"])
 app.include_router(stall_routes.router,     prefix="/api/v1", tags=["Stall"])  # ← NEW
 app.include_router(student_routes.router,   prefix="/api/v1", tags=["Students"])
 app.include_router(school_routes.router,    prefix="/api/v1", tags=["School"])
-app.include_router(corporate_routes.router, prefix="/api/v1", tags=["Corporate"])
+app.include_router(corporate_routes.router, prefix="/api/v1", tags=["Corporate"], dependencies=[Depends(require_auth)])
+app.include_router(auth_routes.router,      prefix="/api/v1", tags=["Auth"])
 
 
 # ── Gate page (mobile) ────────────────────────────────────────────────────────

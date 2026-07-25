@@ -9,6 +9,7 @@ from models.scan_log import ScanLog
 from schemas.attendee import AttendeeResponse, CheckInResponse
 from schemas.product import ProductResponse
 from utils.badge_generator import generate_badge
+from utils.auth import require_auth
 import re
 import uuid
 
@@ -39,7 +40,7 @@ def _extract_attendee_qr_id(qr_data: str):
     return match.group(1) if match else None
 
 
-@router.post("/qr/scan")
+@router.post("/qr/scan", dependencies=[Depends(require_auth)])
 def handle_qr_scan(qr_data: str, request: Request, db: Session = Depends(get_db)):
     """
     Unified QR scan handler.

@@ -9,6 +9,7 @@ from schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from utils.qr_generator import generate_qr, generate_qr_bytes
 from utils.user_agent import parse_user_agent
 from utils.geolocation import get_ip_location
+from utils.auth import require_auth
 from typing import List
 import os
 
@@ -20,7 +21,7 @@ router = APIRouter()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://smart-desk-backend-1.onrender.com").rstrip("/")
 
 
-@router.post("/products", response_model=ProductResponse)
+@router.post("/products", response_model=ProductResponse, dependencies=[Depends(require_auth)])
 def create_product(payload: ProductCreate, db: Session = Depends(get_db)):
     product = Product(**payload.model_dump())
     db.add(product)
@@ -40,7 +41,7 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db)):
     return product
 
 
-@router.post("/products/{product_id}/regenerate-qr", response_model=ProductResponse)
+@router.post("/products/{product_id}/regenerate-qr", response_model=ProductResponse, dependencies=[Depends(require_auth)])
 def regenerate_qr(product_id: int, db: Session = Depends(get_db)):
     """Re-generate a product's QR code with the current format/FRONTEND_URL.
     Needed for products created before the QR format changed to a link."""
@@ -58,7 +59,7 @@ def regenerate_qr(product_id: int, db: Session = Depends(get_db)):
     return product
 
 
-@router.get("/products", response_model=List[ProductResponse])
+@router.get("/products", response_model=List[ProductResponse], dependencies=[Depends(require_auth)])
 def list_products(db: Session = Depends(get_db)):
     return db.query(Product).order_by(Product.created_at.desc()).all()
 
@@ -150,7 +151,7 @@ def record_scan_duration(scan_log_id: int, payload: ScanDurationPayload, db: Ses
     return {"status": "ok"}
 
 
-@router.put("/products/{product_id}", response_model=ProductResponse)
+@router.put("/products/{product_id}", response_model=ProductResponse, dependencies=[Depends(require_auth)])
 def update_product(product_id: int, payload: ProductUpdate, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
@@ -164,7 +165,7 @@ def update_product(product_id: int, payload: ProductUpdate, db: Session = Depend
     return product
 
 
-@router.delete("/products/{product_id}")
+@router.delete("/products/{product_id}", dependencies=[Depends(require_auth)])
 def delete_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:

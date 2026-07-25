@@ -11,12 +11,14 @@ from models.holiday import Holiday
 from models.leave import Leave
 from schemas.holiday import HolidayCreate, HolidayResponse
 from schemas.leave import LeaveCreate, LeaveResponse
+from utils.auth import require_auth
 from typing import List
 
 router = APIRouter()
 
 
-# ── Mark attendance (called by the Pi after a face match) ────────────────────
+# ── Mark attendance — deliberately left public: called directly by the Pi
+# face-attendance script, which has no way to hold a staff login token. ──────
 @router.post("/school/attendance")
 def mark_attendance(
     roll_number: str   = Form(...),
@@ -67,7 +69,7 @@ def _students_on_leave_today(db: Session) -> dict:
 
 
 # ── Today's attendance report ─────────────────────────────────────────────────
-@router.get("/school/attendance/today")
+@router.get("/school/attendance/today", dependencies=[Depends(require_auth)])
 def today_attendance(db: Session = Depends(get_db)):
     today = date.today()
     total_students = db.query(Student).count()
@@ -119,7 +121,7 @@ def today_attendance(db: Session = Depends(get_db)):
 
 
 # ── Class-wise attendance breakdown (School Analytics Dashboard) ─────────────
-@router.get("/school/analytics/class-breakdown")
+@router.get("/school/analytics/class-breakdown", dependencies=[Depends(require_auth)])
 def class_breakdown(db: Session = Depends(get_db)):
     today = date.today()
     students = db.query(Student).all()
@@ -156,7 +158,7 @@ def class_breakdown(db: Session = Depends(get_db)):
 
 
 # ── Holidays ──────────────────────────────────────────────────────────────────
-@router.post("/school/holidays", response_model=HolidayResponse)
+@router.post("/school/holidays", response_model=HolidayResponse, dependencies=[Depends(require_auth)])
 def create_holiday(payload: HolidayCreate, db: Session = Depends(get_db)):
     existing = db.query(Holiday).filter(Holiday.date == payload.date).first()
     if existing:
@@ -168,12 +170,12 @@ def create_holiday(payload: HolidayCreate, db: Session = Depends(get_db)):
     return holiday
 
 
-@router.get("/school/holidays", response_model=List[HolidayResponse])
+@router.get("/school/holidays", response_model=List[HolidayResponse], dependencies=[Depends(require_auth)])
 def list_holidays(db: Session = Depends(get_db)):
     return db.query(Holiday).order_by(Holiday.date).all()
 
 
-@router.delete("/school/holidays/{holiday_id}")
+@router.delete("/school/holidays/{holiday_id}", dependencies=[Depends(require_auth)])
 def delete_holiday(holiday_id: int, db: Session = Depends(get_db)):
     holiday = db.query(Holiday).filter(Holiday.id == holiday_id).first()
     if not holiday:
@@ -184,7 +186,7 @@ def delete_holiday(holiday_id: int, db: Session = Depends(get_db)):
 
 
 # ── Leaves ────────────────────────────────────────────────────────────────────
-@router.post("/school/leaves", response_model=LeaveResponse)
+@router.post("/school/leaves", response_model=LeaveResponse, dependencies=[Depends(require_auth)])
 def create_leave(payload: LeaveCreate, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.id == payload.student_id).first()
     if not student:
@@ -198,7 +200,7 @@ def create_leave(payload: LeaveCreate, db: Session = Depends(get_db)):
     return leave
 
 
-@router.get("/school/leaves", response_model=List[LeaveResponse])
+@router.get("/school/leaves", response_model=List[LeaveResponse], dependencies=[Depends(require_auth)])
 def list_leaves(student_id: int = None, db: Session = Depends(get_db)):
     query = db.query(Leave)
     if student_id:
@@ -206,7 +208,7 @@ def list_leaves(student_id: int = None, db: Session = Depends(get_db)):
     return query.order_by(Leave.date_from.desc()).all()
 
 
-@router.delete("/school/leaves/{leave_id}")
+@router.delete("/school/leaves/{leave_id}", dependencies=[Depends(require_auth)])
 def delete_leave(leave_id: int, db: Session = Depends(get_db)):
     leave = db.query(Leave).filter(Leave.id == leave_id).first()
     if not leave:
@@ -217,7 +219,7 @@ def delete_leave(leave_id: int, db: Session = Depends(get_db)):
 
 
 # ── Annual report export (Excel) ──────────────────────────────────────────────
-@router.get("/school/report/annual")
+@router.get("/school/report/annual", dependencies=[Depends(require_auth)])
 def export_annual_report(db: Session = Depends(get_db)):
     students = db.query(Student).order_by(Student.class_section, Student.name).all()
 

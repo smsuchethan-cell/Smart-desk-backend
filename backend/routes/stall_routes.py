@@ -3,8 +3,16 @@ from sqlalchemy.orm import Session
 from datetime import datetime, date
 from database.db import get_db
 from models.stall_status import StallStatus
+from utils.auth import require_auth
 
 router = APIRouter()
+
+# NOTE: /stall/update, /stall/heartbeat, and the POST /stall/gps below are
+# called directly by the Raspberry Pi scripts, which have no way to hold a
+# staff login token — they're intentionally left open. They only ever
+# receive a visitor count or a coordinate, never any personal data. The
+# read endpoints below (viewed on the admin dashboard) and the reset
+# endpoint (a staff-only action) are protected.
 
 # If the Pi hasn't sent a heartbeat in this many seconds, treat the camera as offline.
 HEARTBEAT_TIMEOUT_SECONDS = 30
@@ -59,7 +67,7 @@ def stall_heartbeat(db: Session = Depends(get_db)):
     return {"status": "ok"}
 
 
-@router.get("/stall/count")
+@router.get("/stall/count", dependencies=[Depends(require_auth)])
 def get_stall_count(db: Session = Depends(get_db)):
     row = get_singleton(db)
     row = check_and_reset(db, row)
@@ -81,7 +89,7 @@ def get_stall_count(db: Session = Depends(get_db)):
     }
 
 
-@router.post("/stall/reset")
+@router.post("/stall/reset", dependencies=[Depends(require_auth)])
 def reset_stall_count(db: Session = Depends(get_db)):
     row = get_singleton(db)
     row.yesterday_count = row.today_count
@@ -106,7 +114,7 @@ def update_gps(latitude: float, longitude: float, db: Session = Depends(get_db))
     return {"status": "GPS Updated", "latitude": latitude, "longitude": longitude}
 
 
-@router.get("/stall/gps")
+@router.get("/stall/gps", dependencies=[Depends(require_auth)])
 def get_gps(db: Session = Depends(get_db)):
     row = get_singleton(db)
     return {"latitude": row.latitude, "longitude": row.longitude}

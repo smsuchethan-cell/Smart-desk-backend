@@ -5,6 +5,34 @@ const BASE = `${ROOT}/api/v1`;
 
 const api = axios.create({ baseURL: BASE });
 
+// ── Auth ────────────────────────────────────────────────────
+// Attaches the staff login token (if present) to every request. Public
+// endpoints (product/attendee/register/gate pages) simply ignore the
+// header — sending it there is harmless.
+const TOKEN_KEY = "smartdesk_token";
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+// An expired/invalid token means the admin dashboard should show the
+// login screen again — clearing it and reloading is the simplest way to
+// get AuthContext to re-read (now-empty) localStorage on next mount. Only
+// reload if a token actually existed and got rejected (a real expiry) —
+// otherwise a logged-out visitor whose page fires a background request
+// (e.g. the check-in poller) would 401 and reload in an endless loop.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      const hadToken = !!localStorage.getItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      if (hadToken) window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ── Keep-alive ping ─────────────────────────────────────────
 // Render's free tier spins the backend down after ~15min idle, so the first
 // request after a sleep can take 30-60s. Pinging /health while the app is
