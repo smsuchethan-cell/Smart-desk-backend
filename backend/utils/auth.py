@@ -9,11 +9,35 @@ import hmac
 import json
 import os
 import time
+from collections import defaultdict
 from fastapi import Header, HTTPException
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 SECRET_KEY = os.getenv("SECRET_KEY", "")
 TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60  # 7 days
+
+# ── Login rate limiting ────────────────────────────────────────────────────
+# In-memory is fine here — a single Render web service instance, and this
+# only needs to survive a few minutes, not a restart. Blocks brute-forcing
+# the shared password by IP rather than by account (there's only one).
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_WINDOW_SECONDS = 5 * 60
+_failed_attempts = defaultdict(list)
+
+
+def check_login_rate_limit(ip: str):
+    now = time.time()
+    _failed_attempts[ip] = [t for t in _failed_attempts[ip] if now - t < LOGIN_WINDOW_SECONDS]
+    if len(_failed_attempts[ip]) >= MAX_LOGIN_ATTEMPTS:
+        raise HTTPException(429, "Too many attempts — wait a few minutes and try again.")
+
+
+def record_failed_login(ip: str):
+    _failed_attempts[ip].append(time.time())
+
+
+def clear_failed_logins(ip: str):
+    _failed_attempts.pop(ip, None)
 
 
 def _sign(payload_b64: str) -> str:

@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy import text
-import os, io, socket
-import qrcode
+import os
 
 from database.db import engine, Base
 
@@ -86,68 +84,17 @@ app.include_router(corporate_routes.router, prefix="/api/v1", tags=["Corporate"]
 app.include_router(auth_routes.router,      prefix="/api/v1", tags=["Auth"])
 
 
-# ── Gate page (mobile) ────────────────────────────────────────────────────────
-@app.get("/gate", response_class=HTMLResponse, tags=["Gate"])
-def gate_page():
-    gate_html = "static/gate.html"
-    if not os.path.exists(gate_html):
-        return HTMLResponse("<h2>gate.html not found in static/</h2>", status_code=404)
-    with open(gate_html, "r", encoding="utf-8") as f:
-        return HTMLResponse(f.read())
-
-
-# ── Self-registration page ────────────────────────────────────────────────────
-@app.get("/register", response_class=HTMLResponse, tags=["Gate"])
-def register_page():
-    path = "static/register.html"
-    if not os.path.exists(path):
-        return HTMLResponse("<h2>register.html not found in static/</h2>", status_code=404)
-    with open(path, "r", encoding="utf-8") as f:
-        return HTMLResponse(f.read())
-
-
-# ── System QR ─────────────────────────────────────────────────────────────────
-@app.get("/system-qr", tags=["Gate"])
-def system_qr():
-    try:
-        hostname = socket.gethostname()
-        ip       = socket.gethostbyname(hostname)
-    except Exception:
-        ip = "localhost"
-
-    gate_url = f"http://{ip}:8000/gate"
-
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(gate_url)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="#6c63ff", back_color="white")
-
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-
-    return StreamingResponse(
-        buf,
-        media_type="image/png",
-        headers={"X-Gate-URL": gate_url},
-    )
-
-
 # ── Health ────────────────────────────────────────────────────────────────────
+# Note: the real gate/register pages are on the React frontend now
+# (smart-desk-backend-1.onrender.com/gate and /register/:eventId) — this
+# API used to also serve its own standalone versions of both from static
+# HTML files, from before those frontend pages existed. Removed as dead code.
 @app.get("/", tags=["Health"])
 def root():
     return {
-        "status":   "online",
-        "message":  "Smart Digital Desk Backend v2.0",
-        "docs":     "/docs",
-        "gate":     "/gate",
-        "register": "/register",
-        "qr":       "/system-qr",
+        "status":  "online",
+        "message": "Smart Digital Desk Backend v2.0",
+        "docs":    "/docs",
     }
 
 

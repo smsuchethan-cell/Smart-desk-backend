@@ -4,11 +4,9 @@ from database.db import get_db
 from models.product import Product
 from models.attendee import Attendee
 from models.attendance import Attendance
-from models.event import Event
 from models.scan_log import ScanLog
 from schemas.attendee import AttendeeResponse, CheckInResponse
 from schemas.product import ProductResponse
-from utils.badge_generator import generate_badge
 from utils.auth import require_auth
 import re
 import uuid
@@ -80,6 +78,10 @@ def handle_qr_scan(qr_data: str, request: Request, db: Session = Depends(get_db)
                 "message": f"No registration found for QR ID: {qr_id}",
             }
 
+        # Badge is regenerated fresh on every view (GET /gate/print/{id})
+        # rather than cached to disk, so this is just that endpoint's URL.
+        badge_url = f"api/v1/gate/print/{attendee.id}"
+
         # Duplicate check-in guard
         existing = db.query(Attendance).filter(Attendance.attendee_id == attendee.id).first()
         if existing:
@@ -89,21 +91,8 @@ def handle_qr_scan(qr_data: str, request: Request, db: Session = Depends(get_db)
                 "already_checked_in": True,
                 "message": f"Already checked in: {attendee.name}",
                 "data": AttendeeResponse.model_validate(attendee),
+                "badge_path": badge_url,
             }
-
-        event = db.query(Event).filter(Event.id == attendee.event_id).first()
-
-        # Generate badge
-        badge_path = generate_badge(
-            name=attendee.name,
-            company=attendee.company or "",
-            designation=attendee.designation or "",
-            qr_id=attendee.qr_id,
-            qr_code_path=attendee.qr_code_path,
-            photo_path=attendee.photo_path,
-            event_name=event.name if event else "",
-            email=attendee.email or "",
-        )
 
         # Record attendance
         attendance = Attendance(
@@ -120,7 +109,7 @@ def handle_qr_scan(qr_data: str, request: Request, db: Session = Depends(get_db)
             "already_checked_in": False,
             "message": f"Welcome {attendee.name}! Badge ready.",
             "data": AttendeeResponse.model_validate(attendee),
-            "badge_path": badge_path,
+            "badge_path": badge_url,
         }
 
     else:

@@ -8,17 +8,13 @@ import fitz
 import qrcode
 import io
 import os
-import uuid
 from PIL import Image, ImageDraw, ImageFont
 from reportlab.lib.pagesizes import inch
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.lib import colors
 
-OUTPUT_DIR    = "static/badges"
 TEMPLATE_PATH = "static/badge_template.pdf"
-
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # 6x4 inch landscape — single page
 PAGE_W = 6 * inch
@@ -151,20 +147,22 @@ def build_back_image() -> Image.Image:
     return pdf_page_to_image(TEMPLATE_PATH, page_num=1, dpi=200)
 
 
-def generate_badge(
+def generate_badge_bytes(
     name: str,
     company: str,
     designation: str,
     qr_id: str,
-    qr_code_path: str = None,
     photo_path: str   = None,
     event_name: str   = "",
     email: str        = "",
-) -> str:
-    output_path = f"{OUTPUT_DIR}/badge_{qr_id}_{uuid.uuid4().hex[:6]}.pdf"
-
+) -> bytes:
+    """Renders the badge PDF entirely in memory — no disk write, so it's
+    safe to call fresh on every print request instead of caching the file.
+    A cached badge on disk was lost on every server restart, the same
+    ephemeral-filesystem issue QR codes had before they were switched to
+    on-the-fly generation."""
     if not os.path.exists(TEMPLATE_PATH):
-        return generate_fallback_badge(name, designation, email, qr_id, output_path)
+        return _fallback_badge_bytes(name, designation, email, qr_id)
 
     try:
         front_img = build_front_image(
@@ -201,27 +199,25 @@ def generate_badge(
                 fill="#aaaaaa", width=2
             )
 
-        # Save as SINGLE PAGE PDF — 6x4 landscape
         sheet_buf = io.BytesIO()
         sheet.save(sheet_buf, format="PNG", dpi=(200, 200))
         sheet_buf.seek(0)
 
-        c = canvas.Canvas(output_path, pagesize=(PAGE_W, PAGE_H))
+        pdf_buf = io.BytesIO()
+        c = canvas.Canvas(pdf_buf, pagesize=(PAGE_W, PAGE_H))
         c.drawImage(ImageReader(sheet_buf), 0, 0, PAGE_W, PAGE_H)
         c.save()
-
-        return output_path
+        pdf_buf.seek(0)
+        return pdf_buf.getvalue()
 
     except Exception as e:
         print(f"⚠ Badge failed: {e}")
-        return generate_fallback_badge(name, designation, email, qr_id, output_path)
+        return _fallback_badge_bytes(name, designation, email, qr_id)
 
 
-def generate_fallback_badge(
-    name: str, designation: str, email: str,
-    qr_id: str, output_path: str
-) -> str:
-    c = canvas.Canvas(output_path, pagesize=(PAGE_W, PAGE_H))
+def _fallback_badge_bytes(name: str, designation: str, email: str, qr_id: str) -> bytes:
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=(PAGE_W, PAGE_H))
 
     # Left = Front
     c.setFillColor(colors.white)
@@ -254,4 +250,5 @@ def generate_fallback_badge(
     c.drawCentredString(PAGE_W*3/4, PAGE_H*0.45, "admin@siritechnocrats.com")
 
     c.save()
-    return output_path
+    buf.seek(0)
+    return buf.getvalue()

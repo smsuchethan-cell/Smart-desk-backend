@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, Response
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from database.db import get_db
 from models.attendee import Attendee
@@ -7,7 +7,7 @@ from models.attendance import Attendance
 from models.event import Event
 from schemas.attendee import AttendeeResponse, CheckInResponse
 from utils.qr_generator import generate_qr, generate_qr_bytes
-from utils.badge_generator import generate_badge
+from utils.badge_generator import generate_badge_bytes
 from utils.mailer import send_registration_email
 from utils.whatsapp import send_registration_whatsapp
 from utils.auth import require_auth
@@ -129,6 +129,19 @@ def get_attendee_by_qr(qr_id: str, db: Session = Depends(get_db)):
     }
 
 
+# ── Attendee QR image — generated fresh on every request ─────────────────────
+# Same fix as product QR codes: qr_code_path (written at registration time)
+# lives on Render's ephemeral disk and can vanish on a restart. This endpoint
+# never touches disk, so it can't 404 that way.
+@router.get("/attendees/qr/{qr_id}/image.png")
+def get_attendee_qr_image(qr_id: str, db: Session = Depends(get_db)):
+    attendee = db.query(Attendee).filter(Attendee.qr_id == qr_id).first()
+    if not attendee:
+        raise HTTPException(404, "Attendee not found")
+    png_bytes = generate_qr_bytes(f"{FRONTEND_URL}/attendee/{qr_id}")
+    return Response(content=png_bytes, media_type="image/png")
+
+
 # ── Export to Excel ─────────────────────────────────────────────────────────
 # Must be declared before /attendees/{attendee_id} — otherwise FastAPI tries
 # to parse "export" as an int attendee_id and 422s instead of matching this route.
@@ -206,33 +219,25 @@ def checkin_attendee(qr_id: str, db: Session = Depends(get_db)):
     if not attendee:
         return CheckInResponse(success=False, message=f"No attendee found: {qr_id}")
 
+    # Badge is regenerated fresh on every view (GET /gate/print/{id}) rather
+    # than cached to disk, so badge_path here is just that endpoint's URL —
+    # same value whether this is a fresh check-in or an already-checked-in
+    # visitor asking again.
+    badge_url = f"api/v1/gate/print/{attendee.id}"
+
     existing = db.query(Attendance).filter(Attendance.attendee_id == attendee.id).first()
     if existing:
         return CheckInResponse(
             success=True, message="Already checked in",
             attendee=AttendeeResponse.model_validate(attendee),
-            badge_path=existing.badge_path,
+            badge_path=badge_url,
             already_checked_in=True,
         )
-
-    event = db.query(Event).filter(Event.id == attendee.event_id).first()
-
-    badge_path = generate_badge(
-        name         = attendee.name,
-        company      = attendee.company or "",
-        designation  = attendee.designation or "",
-        qr_id        = attendee.qr_id,
-        qr_code_path = attendee.qr_code_path,
-        photo_path   = attendee.photo_path,
-        event_name   = event.name if event else "",
-        email        = attendee.email or "",
-    )
 
     attendance = Attendance(
         attendee_id   = attendee.id,
         event_id      = attendee.event_id,
         badge_printed = True,
-        badge_path    = badge_path,        # ← saved in same commit
     )
     db.add(attendance)
     db.commit()
@@ -240,7 +245,7 @@ def checkin_attendee(qr_id: str, db: Session = Depends(get_db)):
     return CheckInResponse(
         success=True, message=f"Welcome {attendee.name}!",
         attendee=AttendeeResponse.model_validate(attendee),
-        badge_path=badge_path, already_checked_in=False,
+        badge_path=badge_url, already_checked_in=False,
     )
 
 
@@ -253,8 +258,6 @@ def gate_verify(unique_code: str = Form(...), db: Session = Depends(get_db)):
     if not attendee:
         raise HTTPException(400, "Invalid code. Please check and try again.")
 
-    event = db.query(Event).filter(Event.id == attendee.event_id).first()
-
     existing = db.query(Attendance).filter(Attendance.attendee_id == attendee.id).first()
     if existing:
         return {
@@ -265,24 +268,10 @@ def gate_verify(unique_code: str = Form(...), db: Session = Depends(get_db)):
             "print_url":          f"/api/v1/gate/print/{attendee.id}",
         }
 
-    # Generate badge first
-    badge_path = generate_badge(
-        name         = attendee.name,
-        company      = attendee.company or "",
-        designation  = attendee.designation or "",
-        qr_id        = attendee.qr_id,
-        qr_code_path = attendee.qr_code_path,
-        photo_path   = attendee.photo_path,
-        event_name   = event.name if event else "",
-        email        = attendee.email or "",
-    )
-
-    # Save attendance with badge_path in ONE commit
     attendance = Attendance(
         attendee_id   = attendee.id,
         event_id      = attendee.event_id,
         badge_printed = True,
-        badge_path    = badge_path,        # ← in same commit, no second commit needed
     )
     db.add(attendance)
     db.commit()
@@ -291,7 +280,6 @@ def gate_verify(unique_code: str = Form(...), db: Session = Depends(get_db)):
         "success":    True,
         "message":    f"Welcome, {attendee.name}!",
         "name":       attendee.name,
-        "badge_path": badge_path,
         "print_url":  f"/api/v1/gate/print/{attendee.id}",
     }
 
@@ -299,17 +287,34 @@ def gate_verify(unique_code: str = Form(...), db: Session = Depends(get_db)):
 # ── Print badge ───────────────────────────────────────────────────────────────
 @router.get("/gate/print/{attendee_id}")
 def print_badge(attendee_id: int, db: Session = Depends(get_db)):
+    """Regenerated fresh on every request rather than reading a cached PDF
+    from disk — a cached copy was lost on every server restart, the same
+    ephemeral-filesystem issue QR codes had before switching to on-the-fly
+    generation."""
     attendance = db.query(Attendance).filter(
         Attendance.attendee_id == attendee_id
     ).first()
     if not attendance:
         raise HTTPException(404, "Attendance record not found")
-    if not attendance.badge_path or not os.path.exists(attendance.badge_path):
-        raise HTTPException(404, "Badge file not found")
-    return FileResponse(
-        attendance.badge_path,
-        media_type = "application/pdf",
-        headers    = {"Content-Disposition": "inline"},
+
+    attendee = db.query(Attendee).filter(Attendee.id == attendee_id).first()
+    if not attendee:
+        raise HTTPException(404, "Attendee not found")
+    event = db.query(Event).filter(Event.id == attendee.event_id).first()
+
+    pdf_bytes = generate_badge_bytes(
+        name        = attendee.name,
+        company     = attendee.company or "",
+        designation = attendee.designation or "",
+        qr_id       = attendee.qr_id,
+        photo_path  = attendee.photo_path,
+        event_name  = event.name if event else "",
+        email       = attendee.email or "",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline"},
     )
 
 

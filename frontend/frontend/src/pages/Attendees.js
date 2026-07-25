@@ -163,10 +163,8 @@ function CheckInModal({ attendee, onClose }) {
             <p style={{ color: "var(--accent)", fontSize: 13, marginBottom: 2 }}>{attendee.designation}</p>
             <p style={{ color: "var(--muted)", marginBottom: 4 }}>{attendee.company}</p>
             <p style={{ color: "var(--accent2)", fontFamily: "monospace", marginBottom: 24 }}>{attendee.qr_id}</p>
-            {attendee.qr_code_path && (
-              <img src={`${BASE}/${attendee.qr_code_path}`} alt="QR"
-                style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 24 }} />
-            )}
+            <img src={`${BASE}/api/v1/attendees/qr/${attendee.qr_id}/image.png`} alt="QR"
+              style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 24 }} />
             <button className="btn btn-success" style={{ width: "100%", justifyContent: "center" }}
               onClick={doCheckin} disabled={loading}>
               {loading ? "Processing…" : "✅ Confirm Check-In & Print Badge"}
@@ -352,11 +350,8 @@ export default function Attendees() {
                           </code>
                         </td>
                         <td>
-                          {a.qr_code_path
-                            ? <img src={`${BASE}/${a.qr_code_path}`} alt="QR"
-                                style={{ width: 44, height: 44, borderRadius: 6 }} />
-                            : <span style={{ color: "var(--muted)" }}>—</span>
-                          }
+                          <img src={`${BASE}/api/v1/attendees/qr/${a.qr_id}/image.png`} alt="QR"
+                            style={{ width: 44, height: 44, borderRadius: 6 }} />
                         </td>
                         <td>
                           <div style={{ display: "flex", gap: 8 }}>
