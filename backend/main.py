@@ -69,6 +69,7 @@ with engine.begin() as conn:
     conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS region VARCHAR(100)"))
     conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS country VARCHAR(100)"))
     conn.execute(text("ALTER TABLE scan_logs ADD COLUMN IF NOT EXISTS time_spent_seconds INTEGER"))
+    conn.execute(text("ALTER TABLE school_attendance ADD COLUMN IF NOT EXISTS left_at TIMESTAMP"))
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(product_routes.router,   prefix="/api/v1", tags=["Products"])

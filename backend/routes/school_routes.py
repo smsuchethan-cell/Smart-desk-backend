@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from datetime import date
+from datetime import date, datetime
 from io import BytesIO
 from openpyxl import Workbook
 from database.db import get_db
@@ -30,7 +30,7 @@ def mark_attendance(
         raise HTTPException(404, f"No student with roll number {roll_number}")
 
     today = date.today()
-    already = (
+    existing = (
         db.query(SchoolAttendance)
         .filter(
             SchoolAttendance.student_id == student.id,
@@ -38,7 +38,12 @@ def mark_attendance(
         )
         .first()
     )
-    if already:
+    if existing:
+        # Same camera sees everyone both arriving and leaving — a later
+        # sighting the same day is the best evidence of when they left, so
+        # update (not insert) rather than creating a second record.
+        existing.left_at = datetime.utcnow()
+        db.commit()
         return {
             "success": True,
             "already_marked": True,
@@ -90,6 +95,7 @@ def today_attendance(db: Session = Depends(get_db)):
             "roll_number":  s.roll_number,
             "class_section": s.class_section,
             "marked_at":    rec.marked_at,
+            "left_at":      rec.left_at,
         }
         for rec, s in records
     ]

@@ -52,13 +52,16 @@ export default function Attendance() {
           ) : (
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Name</th><th>Roll No.</th><th>Time</th></tr></thead>
+                <thead><tr><th>Name</th><th>Roll No.</th><th>Arrived</th><th>Left</th></tr></thead>
                 <tbody>
                   {attendance.present.map(p => (
                     <tr key={p.student_id}>
                       <td style={{ fontWeight: 600 }}>{p.name}</td>
                       <td>{p.roll_number}</td>
                       <td>{new Date(p.marked_at).toLocaleTimeString()}</td>
+                      <td style={{ color: p.left_at ? "var(--text)" : "var(--muted)" }}>
+                        {p.left_at ? new Date(p.left_at).toLocaleTimeString() : "Still here"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
