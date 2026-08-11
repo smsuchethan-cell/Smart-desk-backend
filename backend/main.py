@@ -21,6 +21,7 @@ from routes import (
     school_routes,
     corporate_routes,
     auth_routes,
+    chat_routes,
 )
 from fastapi import Depends
 from utils.auth import require_auth
@@ -83,6 +84,7 @@ app.include_router(student_routes.router,   prefix="/api/v1", tags=["Students"])
 app.include_router(school_routes.router,    prefix="/api/v1", tags=["School"])
 app.include_router(corporate_routes.router, prefix="/api/v1", tags=["Corporate"], dependencies=[Depends(require_auth)])
 app.include_router(auth_routes.router,      prefix="/api/v1", tags=["Auth"])
+app.include_router(chat_routes.router,      prefix="/api/v1", tags=["Help Bot"])
 
 
 # ── Health ────────────────────────────────────────────────────────────────────

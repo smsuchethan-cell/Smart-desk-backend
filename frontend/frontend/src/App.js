@@ -29,6 +29,7 @@ import Employees       from "./pages/Employees";
 import Meetings        from "./pages/Meetings";
 import ModeLanding     from "./pages/ModeLanding";
 import Login           from "./pages/Login";
+import HelpBot         from "./components/HelpBot";
 
 const CHECKIN_POLL_MS = 8000;
 
@@ -198,6 +199,7 @@ function AdminShell() {
           <Route path="/meetings"   element={<Meetings />} />
         </Routes>
       </div>
+      <HelpBot />
     </div>
   );
 }

@@ -81,6 +81,9 @@ export const getRecentCheckins = (limit=10) => api.get("/analytics/recent-checki
 export const getRecentScans = (limit=15) => api.get("/analytics/recent-scans", { params: { limit } });
 export const getRevenuePotential = () => api.get("/analytics/revenue-potential");
 
+// ── Help bot ────────────────────────────────────────────────
+export const askHelpBot = (question) => api.post("/chat", { question });
+
 // ── Stall Counter ────────────────────────────────────────────
 export const getStallCount = ()  => api.get("/stall/count");   // ← NEW
 
