@@ -143,7 +143,7 @@ INTENTS = [
         "answer": "Two ways: (1) On the Attendees page, click the green \"✅ Check In\" button on that person's row, then \"Confirm Check-In & Print Badge\". (2) At an unstaffed gate, the visitor scans the gate QR, types their entry code, and the badge print dialog pops up automatically.",
     },
     {
-        "strong": [], "weak": ["registration", "qr", "register", "desk", "print", "code", "sign"],
+        "strong": ["registration"], "weak": ["register", "qr", "desk", "print", "code", "sign", "signup", "event", "visitor", "people", "guest"],
         "answer": "Go to Attendees (or Visitors in Corporate mode), pick a specific event from the \"All Events\" dropdown at the top, and a QR code appears in the banner below with a \"⬇ Download QR\" button. Print that and place it at your registration desk — visitors scan it to register themselves.",
     },
     {
@@ -153,6 +153,13 @@ INTENTS = [
     {
         "strong": ["holiday"], "weak": ["add", "school", "calendar", "day"],
         "answer": "School mode → Holidays. Use the left panel: pick a date, type the holiday name, click \"+ Add\". Both fields are required.",
+    },
+    # Must stay ahead of the leave/absence intent below: "leave" is the verb
+    # here ("what time did they leave") and the noun there ("record a leave"),
+    # and ties are resolved by list order.
+    {
+        "strong": ["departure", "left", "timing"], "weak": ["time", "leave", "arrive", "arrival", "student", "attendance", "entry", "exit"],
+        "answer": "School mode → Attendance shows each student's arrival time and departure time for the day. The single entrance camera handles both: the first time it recognises a student they're marked present with that arrival time, and the last time it sees them that day becomes their departure time.",
     },
     {
         "strong": ["leave"], "weak": ["student", "record", "sick", "apply", "absent"],
@@ -175,7 +182,7 @@ INTENTS = [
         "answer": "The Pi camera counts unique visitors per day without identifying anyone — it only asks \"have I seen this face today?\", so someone walking past repeatedly is counted once. The memory is wiped at midnight, so nobody is tracked across days.",
     },
     {
-        "strong": ["device", "browser"], "weak": ["scan", "customer", "track", "location", "analytics"],
+        "strong": ["device", "browser"], "weak": ["scan", "scanned", "customer", "track", "location", "analytics", "city", "activity"],
         "answer": "When a customer scans a product QR, their device type, browser, approximate city and how long they stayed on the page are captured automatically — no form for them to fill in. It all shows on Retail mode → Dashboard → \"📡 Live Scan Activity\".",
     },
     {
